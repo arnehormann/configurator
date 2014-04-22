@@ -10,7 +10,7 @@ import java.util.*;
  * options in one place and provides tools to simplify generating specific help texts and examples.
  * It also closely couples code and documentation and keeps them in sync.
  *
- * The configuration takes the form of an Object of any type with annotated fields.
+ * The configuration takes the form of an Object of any type with module fields.
  * The field name, type and additional optional information from the annotation are used to populate the fields
  * from specified sources. Dynamic online configuration changes are possible, too.
  *
@@ -97,58 +97,64 @@ public final class Configurator<C> {
 
 	/**
 	 * creates a reflective configuration builder.
-	 * The configuration is an object with fields annotated with Config.
-	 * It returns null the value of an annotated key could not be accessed or
-	 * if there are no fields annotated with Config.
+	 * The configuration is an object with fields module with Config.
+	 * It returns null the value of an module key could not be accessed or
+	 * if there are no fields module with Config.
 	 * @param configuration an instance of a configuration.
 	 *               It is used by the builder to determine available fields and their types
 	 *               and to get their default values (the one set on the instance passed here).
-	 *               The Configurator assumes ownership - you should not write to any of the annotated fields
+	 *               The Configurator assumes ownership - you should not write to any of the module fields
 	 *               yourself.
 	 * @return a builder usable to load environment variables, arguments or other files.
 	 */
 	public static <C> Configurator<C> control(C configuration) {
-		Field[] fields = configuration.getClass().getDeclaredFields();
+		Class cc = configuration.getClass();
+		ModuleConfig module = (ModuleConfig) cc.getAnnotation(ModuleConfig.class);
+		String prefix = "";
+		if (module != null) {
+			prefix = module.prefix();
+		}
+		Field[] fields = cc.getDeclaredFields();
 		ArrayList<Parameter> conf = new ArrayList<Parameter>(fields.length);
 		for (Field f : fields) {
 			Config c = f.getAnnotation(Config.class);
 			if (c != null) {
-				conf.add(Parameter.create(configuration, f, c));
+				conf.add(Parameter.create(configuration, f, c, prefix));
 			}
 		}
 		if (conf.isEmpty()) {
-			return null;
+			throw new ReflectionException("configuration class " + configuration.getClass().getName() +
+					" has no fields annotated with Config");
 		}
 		Parameter[] parameters = conf.toArray(new Parameter[conf.size()]);
 		Arrays.sort(parameters);
-		return new Configurator<C>(configuration, parameters);
+		return new Configurator<C>(configuration, parameters, module);
 	}
 
 	private final C config;
+	private final String[] keys;
 	private final Parameter[] parameters;
+	private final String prefix;
+	private final String description;
+	private final boolean module;
 
-	private Configurator(C config, Parameter[] parameters) {
+	private Configurator(C config, Parameter[] parameters, ModuleConfig module) {
 		this.config = config;
-		this.parameters = parameters;
-	}
-
-	private int indexOf(String key) {
-		int min = 0;
-		int max = parameters.length;
-		int i = (max + min) / 2;
-		while (min <= i && i < max) {
-			int cmp = key.compareTo(parameters[i].key);
-			if (cmp == 0) {
-				return i;
-			}
-			if (cmp < 0) {
-				max = i;
-			} else {
-				min = i + 1;
-			}
-			i = (max + min) / 2;
+		String[] keys = new String[parameters.length];
+		for (int i = 0; i < parameters.length; i++) {
+			keys[i] = parameters[i].key;
 		}
-		return -1;
+		this.parameters = parameters;
+		this.keys = keys;
+		if (module != null) {
+			this.prefix = module.prefix();
+			this.description = module.desc();
+			this.module = true;
+		} else {
+			this.prefix = "";
+			this.description = "";
+			this.module = false;
+		}
 	}
 
 	/**
@@ -156,6 +162,30 @@ public final class Configurator<C> {
 	 */
 	public C config() {
 		return config;
+	}
+
+	/**
+	 * reports whether the controlled configuration is a module.
+	 * It is a module when it is annotated with ModuleConfig.
+	 */
+	public boolean isModule() {
+		return module;
+	}
+
+	/**
+	 * return the module prefix or "".
+	 * "" is also a valid module prefix, use isModule() to differentiate.
+	 */
+	public String prefix() {
+		return prefix;
+	}
+
+	/**
+	 * return the module description or "".
+	 * "" is also a valid module description, use isModule() to differentiate.
+	 */
+	public String description() {
+		return description;
 	}
 
 	/**
@@ -174,7 +204,7 @@ public final class Configurator<C> {
 	 * The result may be an empty String but is never null.
 	 */
 	public String description(String key) {
-		int i = indexOf(key);
+		int i = Arrays.binarySearch(keys, key);
 		if (i < 0) {
 			return null;
 		}
@@ -186,7 +216,7 @@ public final class Configurator<C> {
 	 * The result may be null.
 	 */
 	public String defaultValue(String key) {
-		int i = indexOf(key);
+		int i = Arrays.binarySearch(keys, key);
 		if (i < 0) {
 			return null;
 		}
@@ -198,7 +228,7 @@ public final class Configurator<C> {
 	 * The result may be null.
 	 */
 	public String value(String key) {
-		int i = indexOf(key);
+		int i = Arrays.binarySearch(keys, key);
 		if (i < 0) {
 			return null;
 		}
@@ -229,7 +259,7 @@ public final class Configurator<C> {
 	 */
 	public Configurator<C> process(Map<String, String> data) {
 		for (Map.Entry<String, String> e : data.entrySet()) {
-			int i = indexOf(e.getKey());
+			int i = Arrays.binarySearch(keys, e.getKey());
 			if (i >= 0) {
 				parameters[i].set(config, e.getValue());
 			}
@@ -244,7 +274,7 @@ public final class Configurator<C> {
 	 */
 	public Configurator<C> process(Properties data) {
 		for (Map.Entry<Object, Object> e : data.entrySet()) {
-			int i = indexOf((String) e.getKey());
+			int i = Arrays.binarySearch(keys, e.getKey());
 			if (i >= 0) {
 				parameters[i].set(config, (String) e.getValue());
 			}

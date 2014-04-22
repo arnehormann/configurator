@@ -16,11 +16,12 @@ final class Parameter<VT> implements Comparable<Parameter<VT>> {
 	private Field field;
 	private Converter<VT> converter;
 
-	static Parameter create(Object base, Field field, Config config) {
+	static Parameter create(Object base, Field field, Config config, String prefix) {
 		String key = config.key();
 		if ("".equals(key)) {
 			key = field.getName();
 		}
+		key = prefix + key;
 		Converter converter = null;
 		if (config.convert() == DefaultConverter.class) {
 			converter = DefaultConverter.getFor(field.getType());

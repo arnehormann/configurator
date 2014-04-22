@@ -22,14 +22,14 @@ public class Configuration {
 	public static final Configuration INSTANCE = new Configuration();
 
 	public static void main(String[] args) {
-		CliConfiguration conf = new CliConfiguration(INSTANCE, "myapp-", args);
+		CliConfiguration conf = new CliConfiguration("myapp-", args, INSTANCE);
 		conf.printHelp(System.out);
 		if (INSTANCE.debug) {
 			System.out.println("Debug was set");
 		}
-		String[] unknownArgs = conf.unknownArgKeys();
+		String[] unknownArgs = conf.unknownArgs();
 		if (unknownArgs.length > 0) {
-			System.out.println("Unknown argument keys:");
+			System.out.println("Unknown arguments:");
 			for (String a : unknownArgs) {
 				System.out.println("* " + a);
 			}

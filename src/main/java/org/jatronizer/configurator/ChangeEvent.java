@@ -1,5 +1,8 @@
 package org.jatronizer.configurator;
 
+/**
+ * A ChangeEvent represents the change or addition of a single value
+ */
 public class ChangeEvent {
 	public final String key;
 	public final String value;
@@ -10,6 +13,6 @@ public class ChangeEvent {
 	}
 
 	public String toString() {
-		return key + "->" + value;
+		return key + "→" + value;
 	}
 }

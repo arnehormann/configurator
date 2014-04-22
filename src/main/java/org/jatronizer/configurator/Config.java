@@ -11,11 +11,20 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Config {
+
 	/**
-	 * A key defines the point of access
-	 * @return
+	 * A key defines the point of access. If it is not set, the field name is used.
 	 */
 	String key() default "";
+
+	/**
+	 * A description of the field and its valid values.
+	 */
 	String desc() default "";
+
+	/**
+	 * A class converting the field content from and to a String.
+	 * The class must have a default constructor.
+	 */
 	Class<? extends Converter> convert() default DefaultConverter.class;
 }

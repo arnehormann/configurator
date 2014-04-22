@@ -9,6 +9,7 @@ package org.jatronizer.configurator;
  * Implementations must provide a public constructor without arguments.
  */
 public interface Converter<T> {
+
 	/**
 	 * create T from a value in String form
 	 */

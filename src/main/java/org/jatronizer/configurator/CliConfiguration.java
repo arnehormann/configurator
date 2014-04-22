@@ -1,10 +1,16 @@
 package org.jatronizer.configurator;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class CliConfiguration<C> {
+public class CliConfiguration {
+
+	private static class Key {
+		String key;
+		String env;
+		String arg;
+		int configurator;
+	}
 
 	private static enum AnsiMode {
 		//reset(0),
@@ -55,7 +61,7 @@ public class CliConfiguration<C> {
 
 	static {
 		// see http://en.wikipedia.org/wiki/ANSI_escape_code
-		if ("xterm-256color".equals(System.getenv("TERM"))) {
+		if ("1".equals(System.getenv("CLICOLOR"))) {
 			TEXT_KEY     = wrap("%1$s",AnsiMode.fgWhite,  AnsiMode.bgGreen);
 			TEXT_ARG_KEY = wrap("%2$s",AnsiMode.fgWhite,  AnsiMode.bgCyan);
 			TEXT_ENV_KEY = wrap("%3$s",AnsiMode.fgWhite,  AnsiMode.bgBlue);
@@ -70,6 +76,47 @@ public class CliConfiguration<C> {
 			TEXT_VALUE       = "%5$s";
 			TEXT_DEFAULT     = "%6$s";
 		}
+	}
+
+	private static String prepKey(String key, char sep) {
+		// first change each '-', '_', '.', :', '/' to sep
+		// then prefix each capital letter with sep
+		return key.replaceAll("[\\-_.:/]", "" + sep).replaceAll("([A-Z])", sep + "\\1");
+	}
+
+	/**
+	 * maps a single key to the default form of argument key names.
+	 * An argument key is prefixed with a specified prefix and converted to lower case.
+	 * Wherever upper case is used in the key it is interpreted as a word
+	 * boundary and a dash ('-') is inserted as a separator in front of it.
+	 * Dashes ('-') are used instead of any of these key chars: '_', '.', ':', '/'.
+	 * For example, "con_figVar" with a prefix of "-" will become "-con-fig-var".
+	 * @param prefix argument key prefix (e.g. "-")
+	 * @param key configuration parameter key
+	 */
+	public static String asArgKey(String prefix, String key) {
+		if (prefix == null) {
+			prefix = "";
+		}
+		return prepKey(prefix + key, '-').toLowerCase();
+	}
+
+	/**
+	 * maps a single key to the default form of environment key names.
+	 * An environment key is prefixed with a specified prefix and converted to
+	 * upper case. Wherever upper case is used in the key it is interpreted as a word
+	 * boundary and an underscore ('_') is inserted as a separator in front of it.
+	 * Underscores ('_') are used instead of any of these key chars: '-', '.', ':', '/'.
+	 * For example, "con-figVar" with a prefix of "abc_" will become "ABC_CON_FIG_VAR".
+	 * @param prefix unique prefix for environment variables.
+	 *               The prefix can be used to avoid conflicts with other environment variables.
+	 * @param key configuration parameter key
+	 */
+	public static String asEnvKey(String prefix, String key) {
+		if (prefix == null) {
+			prefix = "";
+		}
+		return prepKey(prefix + key, '_').toUpperCase();
 	}
 
 	private static void print(
@@ -97,57 +144,133 @@ public class CliConfiguration<C> {
 		out.printf(format, key, argkey, envkey, description, value, defaultValue);
 	}
 
-	private Configurator<C> cbuilder;
+	private Configurator[] configurators;
 	private String[] keys;
+	private int[] configuratorMap; // key index to configurator index
 	private Map<String, String> argkeys;
-	private Map<String, String> invargkeys;
 	private Map<String, String> envkeys;
-	private Map<String, String> invenvkeys;
-	private String[] argrest;
+	private String[] unknownArgs;
 
-	public CliConfiguration(C configuration, String envPrefix, String[] args) {
-		cbuilder = Configurator.control(configuration);
-		keys = cbuilder.keys();
-		argkeys = Parser.asArgKeys("-", keys);
-		envkeys = Parser.asEnvKeys(envPrefix, keys);
-		Parser.Args parsedArgs = Parser.mapKeys(argkeys, Parser.parse("=", args));
-		argrest = parsedArgs.rest();
-		Map<String, String> argmap = parsedArgs.parsed;
-		Map<String, String> envmap = Parser.mapKeys(envkeys, System.getenv()).parsed;
-		cbuilder.process(envmap).process(argmap);
-		// invert argument maps for reverse lookup
-		invargkeys = new HashMap<String, String>(argkeys.size(), 1.0f);
-		for (Map.Entry<String, String> e : argkeys.entrySet()) {
-			invargkeys.put(e.getValue(), e.getKey());
+	public CliConfiguration(String envPrefix, String[] args, Object...configurations) {
+		final String argstart = "-";
+		final String argsep = "=";
+		// create sorted array of configurators
+		Configurator[] configurators = new Configurator[configurations.length];
+		for (int i = 0; i < configurations.length; i++) {
+			configurators[i] = Configurator.control(configurations[i]);
 		}
-		invenvkeys = new HashMap<String, String>(envkeys.size(), 1.0f);
-		for (Map.Entry<String, String> e : envkeys.entrySet()) {
-			invenvkeys.put(e.getValue(), e.getKey());
+		Arrays.sort(configurators, new Comparator<Configurator>() {
+			public int compare(Configurator o1, Configurator o2) {
+				return o1.prefix().compareTo(o2.prefix());
+			}
+		});
+		this.configurators = configurators;
+		// create sorted array of available keys and detect key collisions
+		ArrayList<Key> keylist = new ArrayList<Key>();
+		for (int i = 0; i < configurators.length; i++) {
+			Configurator configurator = configurators[i];
+			String[] keys = configurator.keys();
+			for (String key : keys) {
+				Key k = new Key();
+				k.key = key;
+				k.arg = asArgKey(argstart, key);
+				k.env = asEnvKey(envPrefix, key);
+				k.configurator = i;
+				keylist.add(k);
+			}
 		}
+		Key[] keys = keylist.toArray(new Key[keylist.size()]);
+		Arrays.sort(keys, new Comparator<Key>() {
+			public int compare(Key o1, Key o2) {
+				return o1.key.compareTo(o2.key);
+			}
+		});
+		// generate maps and detect key collisions
+		int[] configuratorMap = new int[keys.length];
+		String lastKey = null;
+		String lastArg = null;
+		String lastEnv = null;
+		Map<String, String> argkeys = new HashMap<String, String>(keys.length, 1.0f);
+		Map<String, String> envkeys = new HashMap<String, String>(keys.length, 1.0f);
+		for (int i = 0; i < keys.length; i++) {
+			Key k = keys[i];
+			if (k.key.equals(lastKey) || k.arg.equals(lastArg) || k.env.equals(lastEnv)) {
+				// a rather generic Exception, but it's targeting developers and not users.
+				throw new ReflectionException("duplicate key " + k.key + " for key, argument or environment variable");
+			}
+			lastKey = k.key;
+			lastArg = k.arg;
+			lastEnv = k.env;
+			// update mappings
+			configuratorMap[i] = k.configurator;
+			argkeys.put(k.arg, k.key);
+			envkeys.put(k.env, k.key);
+		}
+		this.configuratorMap = configuratorMap;
+		this.argkeys = argkeys;
+		this.envkeys = envkeys;
+		// split arguments into key=value map and rest
+		Map<String, String> argpairs = new HashMap<String, String>(args.length, 1.0f);
+		ArrayList<String> argrest = new ArrayList<String>();
+		for (String arg : args) {
+			String[] pair = arg.split(argsep, 2);
+			if (pair.length == 2) {
+				argpairs.put(pair[0], pair[1]);
+			} else {
+				argrest.add(arg);
+			}
+		}
+		// get environment variables
+		Map<String, String> envpairs = new HashMap<String, String>(System.getenv());
+		// process arguments and environment variables
+		for (int i = 0; i < keys.length; i++) {
+			Key key = keys[i];
+			Configurator conf = configurators[configuratorMap[i]];
+			String value = argpairs.get(key.arg);
+			if (value != null) {
+				conf.process(new ChangeEvent(key.key, value));
+				argpairs.remove(key.arg); // update argmap to see unused args
+				continue;
+			}
+			value = envpairs.get(key.env);
+			if (value != null) {
+				conf.process(new ChangeEvent(key.key, value));
+				continue;
+			}
+		}
+		for (String argkey : argpairs.keySet()) {
+			// put remainder back into unprocessed arguments
+			argrest.add(argkey + argsep + argpairs.get(argkey));
+		}
+		this.unknownArgs = argrest.toArray(new String[argrest.size()]);
 	}
 
-	public String[] unknownArgKeys() {
-		return argrest.clone();
+	public String[] unknownArgs() {
+		return unknownArgs.clone();
 	}
 
 	public void printHelp(PrintStream out) {
-		for (String key : keys) {
-			print(
+		for (Configurator conf : configurators) {
+			for (String key : conf.keys()) {
+				print(
 					out,
-					key, invargkeys.get(key), invenvkeys.get(key),
-					cbuilder.description(key),
-					cbuilder.value(key),
-					cbuilder.defaultValue(key)
-			);
+					key, argkeys.get(key), envkeys.get(key),
+					conf.description(key),
+					conf.value(key),
+					conf.defaultValue(key)
+				);
+			}
 		}
 	}
 
 	public void printCurrent(PrintStream out, boolean all) {
-		for (String key : keys) {
-			String value = cbuilder.value(key);
-			String defaultValue = cbuilder.defaultValue(key);
-			if (all || (value != defaultValue || (value != null && value.equals(defaultValue)))) {
-				out.printf("%s=%s\n", key, value);
+		for (Configurator conf : configurators) {
+			for (String key : conf.keys()) {
+				String value = conf.value(key);
+				String defaultValue = conf.defaultValue(key);
+				if (all || (value != defaultValue || (value != null && value.equals(defaultValue)))) {
+					out.printf("%s=%s\n", key, value);
+				}
 			}
 		}
 	}
