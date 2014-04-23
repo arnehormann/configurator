@@ -78,47 +78,6 @@ public class CliConfiguration {
 		}
 	}
 
-	private static String prepKey(String key, char sep) {
-		// first change each '-', '_', '.', :', '/' to sep
-		// then prefix each capital letter with sep
-		return key.replaceAll("[\\-_.:/]", "" + sep).replaceAll("([A-Z])", sep + "\\1");
-	}
-
-	/**
-	 * maps a single key to the default form of argument key names.
-	 * An argument key is prefixed with a specified prefix and converted to lower case.
-	 * Wherever upper case is used in the key it is interpreted as a word
-	 * boundary and a dash ('-') is inserted as a separator in front of it.
-	 * Dashes ('-') are used instead of any of these key chars: '_', '.', ':', '/'.
-	 * For example, "con_figVar" with a prefix of "-" will become "-con-fig-var".
-	 * @param prefix argument key prefix (e.g. "-")
-	 * @param key configuration parameter key
-	 */
-	public static String asArgKey(String prefix, String key) {
-		if (prefix == null) {
-			prefix = "";
-		}
-		return prepKey(prefix + key, '-').toLowerCase();
-	}
-
-	/**
-	 * maps a single key to the default form of environment key names.
-	 * An environment key is prefixed with a specified prefix and converted to
-	 * upper case. Wherever upper case is used in the key it is interpreted as a word
-	 * boundary and an underscore ('_') is inserted as a separator in front of it.
-	 * Underscores ('_') are used instead of any of these key chars: '-', '.', ':', '/'.
-	 * For example, "con-figVar" with a prefix of "abc_" will become "ABC_CON_FIG_VAR".
-	 * @param prefix unique prefix for environment variables.
-	 *               The prefix can be used to avoid conflicts with other environment variables.
-	 * @param key configuration parameter key
-	 */
-	public static String asEnvKey(String prefix, String key) {
-		if (prefix == null) {
-			prefix = "";
-		}
-		return prepKey(prefix + key, '_').toUpperCase();
-	}
-
 	private static void print(
 			PrintStream out,
 			String key, String argkey, String envkey,
@@ -144,16 +103,62 @@ public class CliConfiguration {
 		out.printf(format, key, argkey, envkey, description, value, defaultValue);
 	}
 
+	private static String prepKey(String key, char sep) {
+		// first change each not alphanumeric char to sep
+		// then prefix each capital letter with sep
+		return key.replaceAll("[^A-Za-z0-9]", "" + sep).replaceAll("([A-Z])", sep + "\\1");
+	}
+
+	/**
+	 * maps a single key to the default form of argument key names.
+	 * An argument key is prefixed with a specified prefix and converted to lower case.
+	 * Wherever upper case is used in the key it is interpreted as a word
+	 * boundary and a dash ('-') is inserted as a separator in front of it.
+	 * Dashes ('-') are used instead of any character that does not match [a-zA-Z0-9].
+	 * english alphabet.
+	 * For example, "con_figVar" with a prefix of "-" will become "-con-fig-var".
+	 * @param prefix argument key prefix (e.g. "-")
+	 * @param key configuration parameter key
+	 */
+	public static String asArgKey(String prefix, String key) {
+		if (prefix == null) {
+			prefix = "";
+		}
+		return prepKey(prefix + key, '-').toLowerCase();
+	}
+
+	/**
+	 * maps a single key to the default form of environment key names.
+	 * An environment key is prefixed with a specified prefix and converted to
+	 * upper case. Wherever upper case is used in the key it is interpreted as a word
+	 * boundary and an underscore ('_') is inserted as a separator in front of it.
+	 * Underscores ('_') are used instead of any character that does not match [a-zA-Z0-9].
+	 * For example, "con-figVar" with a prefix of "abc_" will become "ABC_CON_FIG_VAR".
+	 * @param prefix unique prefix for environment variables.
+	 *               The prefix can be used to avoid conflicts with other environment variables.
+	 * @param key configuration parameter key
+	 */
+	public static String asEnvKey(String prefix, String key) {
+		if (prefix == null) {
+			prefix = "";
+		}
+		return prepKey(prefix + key, '_').toUpperCase();
+	}
+
 	private Configurator[] configurators;
 	private String[] keys;
 	private int[] configuratorMap; // key index to configurator index
 	private Map<String, String> argkeys;
 	private Map<String, String> envkeys;
 	private String[] unknownArgs;
+	private final String argPrefix;
+	private final String argAssign;
+	private final String envPrefix;
 
 	public CliConfiguration(String envPrefix, String[] args, Object...configurations) {
-		final String argstart = "-";
-		final String argsep = "=";
+		this.argPrefix = "-";
+		this.argAssign = "=";
+		this.envPrefix = envPrefix == null ? "" : envPrefix;
 		// create sorted array of configurators
 		Configurator[] configurators = new Configurator[configurations.length];
 		for (int i = 0; i < configurations.length; i++) {
@@ -173,7 +178,7 @@ public class CliConfiguration {
 			for (String key : keys) {
 				Key k = new Key();
 				k.key = key;
-				k.arg = asArgKey(argstart, key);
+				k.arg = asArgKey(argPrefix, key);
 				k.env = asEnvKey(envPrefix, key);
 				k.configurator = i;
 				keylist.add(k);
@@ -213,7 +218,7 @@ public class CliConfiguration {
 		Map<String, String> argpairs = new HashMap<String, String>(args.length, 1.0f);
 		ArrayList<String> argrest = new ArrayList<String>();
 		for (String arg : args) {
-			String[] pair = arg.split(argsep, 2);
+			String[] pair = arg.split(argAssign, 2);
 			if (pair.length == 2) {
 				argpairs.put(pair[0], pair[1]);
 			} else {
@@ -240,7 +245,7 @@ public class CliConfiguration {
 		}
 		for (String argkey : argpairs.keySet()) {
 			// put remainder back into unprocessed arguments
-			argrest.add(argkey + argsep + argpairs.get(argkey));
+			argrest.add(argkey + argAssign + argpairs.get(argkey));
 		}
 		this.unknownArgs = argrest.toArray(new String[argrest.size()]);
 	}
@@ -254,7 +259,7 @@ public class CliConfiguration {
 			for (String key : conf.keys()) {
 				print(
 					out,
-					key, argkeys.get(key), envkeys.get(key),
+					key, asArgKey(argPrefix, key), asEnvKey(envPrefix, key),
 					conf.description(key),
 					conf.value(key),
 					conf.defaultValue(key)
