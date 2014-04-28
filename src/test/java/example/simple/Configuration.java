@@ -1,29 +1,43 @@
 package example.simple;
 
 import org.jatronizer.configurator.CliConfiguration;
-import org.jatronizer.configurator.Config;
+import org.jatronizer.configurator.CliPrinter;
+import org.jatronizer.configurator.Description;
+import org.jatronizer.configurator.Parameter;
 
 public class Configuration {
-	@Config(key = "smtp/login", desc = "login for smtp account")
+	private static enum Colors {
+		@Description("the grass is always growing on the other side")
+		green,
+		@Description("I'm blue")
+		blue
+	}
+
+	@Parameter(key = "smtp/login")
+	@Description("login for the smtp account")
 	private String user = "root";
 
-	@Config(key = "smtp/pass", desc = "password for smtp account")
+	@Parameter(key = "smtp/pass")
+	@Description("password for the smtp account")
 	private String password;
 
-	@Config(key = "smtp/host", desc = "smpt server host")
+	@Parameter(key = "smtp/host")
 	private String host = "localhost";
 
-	@Config(key = "smtp/port", desc = "smtp server port")
+	@Parameter(key = "smtp/port")
 	private int port = 587;
 
-	@Config
+	@Parameter
+	private Colors color = Colors.blue;
+
+	@Parameter
 	private boolean debug = false;
 
 	public static final Configuration INSTANCE = new Configuration();
 
 	public static void main(String[] args) {
 		CliConfiguration conf = new CliConfiguration("myapp-", args, INSTANCE);
-		conf.printHelp(System.out);
+		conf.walk(new CliPrinter(), new CliPrinter());
 		if (INSTANCE.debug) {
 			System.out.println("Debug was set");
 		}

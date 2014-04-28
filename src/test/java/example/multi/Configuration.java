@@ -1,37 +1,41 @@
 package example.multi;
 
-import org.jatronizer.configurator.CliConfiguration;
-import org.jatronizer.configurator.Config;
-import org.jatronizer.configurator.ModuleConfig;
+import org.jatronizer.configurator.*;
 
 public class Configuration {
-	@ModuleConfig(prefix="smtp/warn/", desc="smtp account for error and warn log messages")
+	@Module(prefix="smtp/warn/")
+	@Description("smtp account for error and warn log messages")
 	public static class WarnConfig {
-		@Config(key = "login", desc = "login for smtp account")
+		@Parameter(key = "login")
+		@Description("login used for the smtp account")
 		private String user = "root";
 
-		@Config(key = "pass", desc = "password for smtp account")
+		@Parameter(key = "pass")
+		@Description("password used for the smtp account")
 		private String password;
 
-		@Config(key = "host", desc = "smpt server host")
+		@Parameter(key = "host")
 		private String host = "localhost";
 
-		@Config(key = "port", desc = "smtp server port")
+		@Parameter(key = "port")
 		private int port = 587;
 	}
 
-	@ModuleConfig(prefix="smtp/news/", desc="smtp account for the newsletter")
+	@Module(prefix="smtp/news/")
+	@Description("smtp account for the newsletter")
 	public static class NewsConfig {
-		@Config(key = "login", desc = "login for smtp account")
+		@Parameter(key = "login")
+		@Description("login used for the smtp account")
 		private String user = "root";
 
-		@Config(key = "pass", desc = "password for smtp account")
+		@Parameter(key = "pass")
+		@Description("password used for the smtp account")
 		private String password;
 
-		@Config(key = "host", desc = "smpt server host")
+		@Parameter(key = "host")
 		private String host = "localhost";
 
-		@Config(key = "port", desc = "smtp server port")
+		@Parameter(key = "port")
 		private int port = 587;
 	}
 
@@ -45,7 +49,7 @@ public class Configuration {
 		WarnConfig warn = new WarnConfig();
 		NewsConfig news = new NewsConfig();
 		CliConfiguration conf = new CliConfiguration("myapp-", args, warn, news);
-		conf.printHelp(System.out);
+		conf.walk(new CliPrinter(), new CliPrinter());
 		String[] unknownArgs = conf.unknownArgs();
 		if (unknownArgs.length > 0) {
 			System.out.println("Unknown arguments:");

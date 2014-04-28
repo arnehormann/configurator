@@ -1,106 +1,24 @@
 package org.jatronizer.configurator;
 
-import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class CliConfiguration {
+
+	public static interface ModuleVisitor {
+		void visit(String name, String prefix, String description);
+	}
+
+	public static interface ParameterVisitor {
+		void visit(String key, String argKey, String envKey, String defaultValue, String value, String description,
+		           String ...optionDescPairs);
+	}
 
 	private static class Key {
 		String key;
 		String env;
 		String arg;
 		int configurator;
-	}
-
-	private static enum AnsiMode {
-		//reset(0),
-		bold(1),
-		//blink(5),
-		//reverse(7),
-		fgBlack(30),
-		fgRed(31),
-		fgGreen(32),
-		fgYellow(33),
-		fgBlue(34),
-		fgMagenta(35),
-		fgCyan(36),
-		fgWhite(37),
-		bgBlack(40),
-		bgRed(41),
-		bgGreen(42),
-		bgYellow(43),
-		bgBlue(44),
-		bgMagenta(45),
-		bgCyan(46),
-		bgWhite(47);
-
-		public final String code;
-
-		private AnsiMode(int code) {
-			this.code = "" + code;
-		}
-	}
-
-	private static String wrap(String text, AnsiMode...mode) {
-		if (mode.length == 0) {
-			return text;
-		}
-		String result = "\u001b[" + mode[0].code;
-		for (int i = 1; i < mode.length; i++) {
-			result += ";" + mode[i].code;
-		}
-		return result + "m" + text + "\u001b[0m";
-	}
-
-	private static final String TEXT_KEY;
-	private static final String TEXT_ARG_KEY;
-	private static final String TEXT_ENV_KEY;
-	private static final String TEXT_DESCRIPTION;
-	private static final String TEXT_VALUE;
-	private static final String TEXT_DEFAULT;
-
-	static {
-		// see http://en.wikipedia.org/wiki/ANSI_escape_code
-		if ("1".equals(System.getenv("CLICOLOR"))) {
-			TEXT_KEY     = wrap("%1$s",AnsiMode.fgWhite,  AnsiMode.bgGreen);
-			TEXT_ARG_KEY = wrap("%2$s",AnsiMode.fgWhite,  AnsiMode.bgCyan);
-			TEXT_ENV_KEY = wrap("%3$s",AnsiMode.fgWhite,  AnsiMode.bgBlue);
-			TEXT_DESCRIPTION  = "%4$s";
-			TEXT_VALUE   = wrap("%5$s",AnsiMode.fgYellow, AnsiMode.bgBlack);
-			TEXT_DEFAULT = wrap("%6$s",AnsiMode.fgCyan,   AnsiMode.bgBlack);
-		} else {
-			TEXT_KEY         = "%1$s";
-			TEXT_ARG_KEY     = "%2$s";
-			TEXT_ENV_KEY     = "%3$s";
-			TEXT_DESCRIPTION = "%4$s";
-			TEXT_VALUE       = "%5$s";
-			TEXT_DEFAULT     = "%6$s";
-		}
-	}
-
-	private static void print(
-			PrintStream out,
-			String key, String argkey, String envkey,
-			String description,
-			String value, String defaultValue) {
-		String format = TEXT_KEY + " / " + TEXT_ARG_KEY + " / " + TEXT_ENV_KEY + "\n";
-		if (!"".equals(description)) {
-			format += "\t" + TEXT_DESCRIPTION + "\n";
-		}
-		if (value == null) {
-			if (defaultValue != null) {
-				format += "\tdefault: '" + TEXT_DEFAULT + "'\n";
-			}
-		} else {
-			if (defaultValue == null) {
-				format += "\tvalue: '" + TEXT_VALUE + "'\n";
-			} else if (value.equals(defaultValue)) {
-				format += "\tvalue: '" + TEXT_VALUE + "' (default)\n";
-			} else {
-				format += "\tvalue: '" + TEXT_VALUE + "', default: '" + TEXT_DEFAULT + "'\n";
-			}
-		}
-		out.printf(format, key, argkey, envkey, description, value, defaultValue);
 	}
 
 	private static String prepKey(String key, char sep) {
@@ -201,7 +119,7 @@ public class CliConfiguration {
 			Key k = keys[i];
 			if (k.key.equals(lastKey) || k.arg.equals(lastArg) || k.env.equals(lastEnv)) {
 				// a rather generic Exception, but it's targeting developers and not users.
-				throw new ReflectionException("duplicate key " + k.key + " for key, argument or environment variable");
+				throw new ConfigurationException("duplicate key " + k.key + " for key, argument or environment variable");
 			}
 			lastKey = k.key;
 			lastArg = k.arg;
@@ -214,12 +132,12 @@ public class CliConfiguration {
 		this.configuratorMap = configuratorMap;
 		this.argkeys = argkeys;
 		this.envkeys = envkeys;
-		// split arguments into key=value map and rest
+		// split arguments into key=value map with valid keys and rest
 		Map<String, String> argpairs = new HashMap<String, String>(args.length, 1.0f);
 		ArrayList<String> argrest = new ArrayList<String>();
 		for (String arg : args) {
 			String[] pair = arg.split(argAssign, 2);
-			if (pair.length == 2) {
+			if (pair.length == 2 && argkeys.containsKey(pair[0])) {
 				argpairs.put(pair[0], pair[1]);
 			} else {
 				argrest.add(arg);
@@ -227,25 +145,21 @@ public class CliConfiguration {
 		}
 		// get environment variables
 		Map<String, String> envpairs = new HashMap<String, String>(System.getenv());
-		// process arguments and environment variables
+		// set arguments and environment variables
 		for (int i = 0; i < keys.length; i++) {
 			Key key = keys[i];
 			Configurator conf = configurators[configuratorMap[i]];
 			String value = argpairs.get(key.arg);
 			if (value != null) {
-				conf.process(new ChangeEvent(key.key, value));
+				conf.set(key.key, value);
 				argpairs.remove(key.arg); // update argmap to see unused args
 				continue;
 			}
 			value = envpairs.get(key.env);
 			if (value != null) {
-				conf.process(new ChangeEvent(key.key, value));
+				conf.set(key.key, value);
 				continue;
 			}
-		}
-		for (String argkey : argpairs.keySet()) {
-			// put remainder back into unprocessed arguments
-			argrest.add(argkey + argAssign + argpairs.get(argkey));
 		}
 		this.unknownArgs = argrest.toArray(new String[argrest.size()]);
 	}
@@ -254,28 +168,22 @@ public class CliConfiguration {
 		return unknownArgs.clone();
 	}
 
-	public void printHelp(PrintStream out) {
+	public void walk(ModuleVisitor mf, ParameterVisitor pf) {
 		for (Configurator conf : configurators) {
+			mf.visit(conf.name(), conf.prefix(), conf.description());
 			for (String key : conf.keys()) {
-				print(
-					out,
-					key, asArgKey(argPrefix, key), asEnvKey(envPrefix, key),
-					conf.description(key),
-					conf.value(key),
-					conf.defaultValue(key)
-				);
-			}
-		}
-	}
-
-	public void printCurrent(PrintStream out, boolean all) {
-		for (Configurator conf : configurators) {
-			for (String key : conf.keys()) {
-				String value = conf.value(key);
-				String defaultValue = conf.defaultValue(key);
-				if (all || (value != defaultValue || (value != null && value.equals(defaultValue)))) {
-					out.printf("%s=%s\n", key, value);
+				String[] enumNames = conf.options(key);
+				String[] enumPairs = new String[2 * enumNames.length];
+				for (int i = 0; i < enumNames.length; i++) {
+					enumPairs[2*i] = enumNames[i];
+					enumPairs[2*i+1] = conf.description(key, enumNames[i]);
 				}
+				pf.visit(
+						key, asArgKey(argPrefix, key), asEnvKey(envPrefix, key),
+						conf.defaultValue(key), conf.value(key),
+						conf.description(key),
+						enumPairs
+				);
 			}
 		}
 	}

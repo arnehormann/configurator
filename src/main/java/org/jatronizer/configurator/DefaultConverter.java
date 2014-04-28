@@ -1,5 +1,7 @@
 package org.jatronizer.configurator;
 
+import java.lang.reflect.Method;
+
 /**
  * DefaultConverter provides constants for all non-array primitive types and
  * can provide the fitting converter for a primitive type given its class.
@@ -7,48 +9,47 @@ package org.jatronizer.configurator;
 public final class DefaultConverter implements Converter<Object> {
 
 	/**
-	 * returns the fitting converter for all non-array primitive data types and their wrappers.
+	 * returns the default converter for all non-array primitive data types, their respective wrappers,
+	 * String and enum types.
 	 * If c is null or Void.class, it returns the NULL_CONVERTER.
 	 * If no fitting converter exists, it returns null.
 	 */
-	public static Converter getFor(Class c) {
+	public static <T> Converter<T> getFor(Class<T> c) {
 		if (c == null || c == Void.class) {
-			return NULL_CONVERTER;
+			return (Converter<T>) NULL_CONVERTER;
 		}
 		if (c == boolean.class || c == Boolean.class) {
-			return BOOLEAN_CONVERTER;
+			return (Converter<T>) BOOLEAN_CONVERTER;
 		}
 		if (c == char.class || c == Character.class) {
-			return CHAR_CONVERTER;
+			return (Converter<T>) CHAR_CONVERTER;
 		}
 		if (c == byte.class || c == Byte.class) {
-			return BYTE_CONVERTER;
+			return (Converter<T>) BYTE_CONVERTER;
 		}
 		if (c == short.class || c == Short.class) {
-			return SHORT_CONVERTER;
+			return (Converter<T>) SHORT_CONVERTER;
 		}
 		if (c == int.class || c == Integer.class) {
-			return INT_CONVERTER;
+			return (Converter<T>) INT_CONVERTER;
 		}
 		if (c == long.class || c == Long.class) {
-			return LONG_CONVERTER;
+			return (Converter<T>) LONG_CONVERTER;
 		}
 		if (c == float.class || c == Float.class) {
-			return FLOAT_CONVERTER;
+			return (Converter<T>) FLOAT_CONVERTER;
 		}
 		if (c == double.class || c == Double.class) {
-			return DOUBLE_CONVERTER;
+			return (Converter<T>) DOUBLE_CONVERTER;
 		}
 		if (c == String.class) {
-			return STRING_CONVERTER;
+			return (Converter<T>) STRING_CONVERTER;
+		}
+		if (c.isEnum()) {
+			return EnumConverter.create(c);
 		}
 		return null;
 	}
-
-	/**
-	 * converts anything to null.
-	 */
-	public static final Converter<Object> NULL_CONVERTER = new DefaultConverter();
 
 	/**
 	 * converts between the Strings "true" or "false" and Boolean
@@ -133,18 +134,59 @@ public final class DefaultConverter implements Converter<Object> {
 		public String toString() {return "StringConverter";}
 	};
 
-	private DefaultConverter() {
+	private static class EnumConverter<T> implements Converter<T> {
+
+		public static <T> EnumConverter<T> create(Class<T> c) {
+			if (!c.isEnum()) {
+				throw new ConfigurationException("Class " + c.getCanonicalName() + " is not an enum");
+			}
+			Method valueOf = null;
+			Method name = null;
+			try {
+				valueOf = c.getMethod("valueOf", String.class);
+				name = c.getMethod("name");
+			} catch (NoSuchMethodException e) {
+				// famous last words: never going to happen
+				throw new ConfigurationException("Method name and/or valueOf could not be accessed");
+			}
+			return new EnumConverter<T>(valueOf, name);
+		}
+
+		private final Method valueOf;
+		private final Method name;
+
+		private EnumConverter(Method valueOf, Method name) {
+			this.valueOf = valueOf;
+			this.name = name;
+		}
+
+		public T valueOf(String value) {
+			try {
+				return (T) valueOf.invoke(null, value);
+			} catch (Exception e) {
+				throw new IllegalValueException("Call failed on " + valueOf.toString(), e);
+			}
+		}
+
+		public String toString(T value) {
+			try {
+				return (String) name.invoke(value);
+			} catch (Exception e) {
+				throw new IllegalValueException("Call failed on " + name.toString(), e);
+			}
+		}
+
+		public String toString() {return "EnumConverter";}
 	}
 
-	public Object valueOf(String s) {
-		return null;
-	}
+	/**
+	 * converts anything to null.
+	 */
+	public static final Converter<Object> NULL_CONVERTER = new DefaultConverter();
 
-	public String toString(Object value) {
-		return null;
-	}
+	// DefaultConverter has to be a Converter itself to create the default instances
 
-	public String toString() {
-		return "DefaultConverter";
-	}
+	public Object valueOf(String value) {return null;}
+	public String toString(Object value) {return null;}
+	public String toString() {return "NullConverter";}
 }

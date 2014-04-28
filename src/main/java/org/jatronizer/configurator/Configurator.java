@@ -1,144 +1,117 @@
 package org.jatronizer.configurator;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.util.*;
 
 /**
- * A Configurator processes a configuration.
+ * A Configurator manages the configuration of an application or a subsystem.
  *
- * It helps to keep the whole configuration of a system and the documentation of available configuration
+ * It helps to keep the whole configuration of a system and the description of available configuration
  * options in one place and provides tools to simplify generating specific help texts and examples.
- * It also closely couples code and documentation and keeps them in sync.
+ * It also closely couples code and description and keeps them in sync.
  *
- * The configuration takes the form of an Object of any type with module fields.
+ * The configuration takes the form of an Object of any type with <code>@Parameter</code> annotated fields.
  * The field name, type and additional optional information from the annotation are used to populate the fields
- * from specified sources. Dynamic online configuration changes are possible, too.
+ * from specified sources. Configuration changes at runtime are possible, too.
  *
- * Configuration options are set in the order of arrival - later ones overwrite earlier ones.
- * This can be used to e.g. initialize a configuration with default values, then overwrite those with
+ * Configuration parameters are set in the order of arrival - later ones overwrite earlier ones.
+ * This can be used to e.g. initialize a system with default values, then overwrite those with
  * a configuration file, then environment variables where given and last from command line arguments.
- * Any combination can be used - this package provides some helpers in Parser, the interface for configuration
- * options is <code>Map&lt;String, String&gt;</code> or a tuple of String (ChangeEvent) for single value changes.
  *
  * To use this class in a multi-threaded context, all read accesses of configuration fields should be synchronized
- * on the configuration. Write accesses are always synchronized.
- *
- * Example configuration:
- *   <code><pre>
- *   // First, you should use an interface to avoid dependencies on the configuration type
- *   // from independent submodules (the interface lives in their own package).
- *   // This only illustrates good practices and could be left out.
- *   public interface SftpConfig {
- *       String host();
- *       int port();
- *   }
- *
- *   public class Cfg implements SftpConfig {
- *
- *       // changes the configuration key to sftp/host (would be field name "host" otherwise)
- *       // and adds a description.
- *       // The field itself provides type, name (when key is not specified) and the default value.
- *       @Config(key = "sftp/host", desc = "sftp server host")
- *       private String host = "localhost";
- *
- *       @Config(key = "sftp/port", desc = "sftp server port")
- *       private int port = 22;
- *
- *       // no information in debug, so the key is "debug", the type is boolean and default value is false.
- *       @Config
- *       private boolean debug = false;
- *
- *       // add synchronization to enable online updates.
- *       // Don't provide a setter, apply all configuration changes through the Configurator.
- *       public synchronized String host() {
- *          return host;
- *       }
- *
- *       public synchronized int port() {
- *          return port;
- *       }
- *
- *       public synchronized boolean debug() {
- *           return debug;
- *       }
- *   }
- *   </pre></code>
- *
- * Example usage:
- *   <code><pre>
- *   Cfg cfg = new Cfg();
- *   final String envPrefix = "myapp_";
- *   Configurator<Cfg> cbuilder = Configurator.control(cfg);
- *   String[] keys = cbuilder.keys();
- *   Map<String, String> cliArgs = Parser.mapKeys(
- *      Parser.asArgKeys("-", keys),
- *      Parser.control("=", args)
- *   );
- *   Map<String, String> cliEnv = Parser.mapKeys(
- *      Parser.asEnvKeys(envPrefix, keys),
- *      System.getenv()
- *   );
- *   cbuilder.load(cliEnv).load(cliArgs).config();
- *   // cfg is now initialized with environment variables
- *   // and then with command line arguments.
- *   if (cfg.debug()) {
- *      // this code will be reached if an environment variable
- *      // MYAPP_DEBUG=true
- *      // or a command line argument
- *      // -debug=true
- *      // were passed on execution.
- *      System.err.println("debug was activated");
- *   }
- *   </pre></code>
+ * on the configuration Object.
  *
  * @param <C> the type of the configuration instance
  */
 public final class Configurator<C> {
 
 	/**
-	 * creates a reflective configuration builder.
-	 * The configuration is an object with fields module with Config.
-	 * It returns null the value of an module key could not be accessed or
-	 * if there are no fields module with Config.
+	 * Retrieves the description of a Class, one of its fields or an enum value.
+	 */
+	public static String description(AnnotatedElement elem) {
+		Description d = elem.getAnnotation(Description.class);
+		if (d == null) {
+			return null;
+		}
+		return d.value();
+	}
+
+	/**
+	 * Creates a configuration manager.
+	 * The configuration is an object with fields annotated with <code>Parameter</code>.
 	 * @param configuration an instance of a configuration.
 	 *               It is used by the builder to determine available fields and their types
 	 *               and to get their default values (the one set on the instance passed here).
-	 *               The Configurator assumes ownership - you should not write to any of the module fields
-	 *               yourself.
-	 * @return a builder usable to load environment variables, arguments or other files.
+	 *               The Configurator assumes ownership - you should not write to any of the fields
+	 *               yourself. Read access to fields have to be synchronized on the configuration object
+	 *               when concurrent accesses are possible.
+	 *               <code>Module</code> and <code>Description</code> annotations are processed.
 	 */
 	public static <C> Configurator<C> control(C configuration) {
 		Class cc = configuration.getClass();
-		ModuleConfig module = (ModuleConfig) cc.getAnnotation(ModuleConfig.class);
+		Module module = (Module) cc.getAnnotation(Module.class);
+		String name = "";
 		String prefix = "";
 		if (module != null) {
+			name = module.name();
 			prefix = module.prefix();
 		}
+		ParameterField[] params = fetchParameters(configuration, prefix);
+		return new Configurator<C>(configuration, params, module != null, name, prefix, description(cc));
+	}
+
+	/**
+	 * Creates a configuration manager.
+	 * The configuration is an object with fields annotated with <code>Parameter</code>.
+	 * @param configuration an instance of a configuration.
+	 *               It is used by the builder to determine available fields and their types
+	 *               and to get their default values (the one set on the instance passed here).
+	 *               The Configurator assumes ownership - you should not write to any of the fields
+	 *               yourself. Read access to fields have to be synchronized on the configuration object
+	 *               when concurrent accesses are possible.
+	 * @param name mocule name
+	 * @param prefix prefix to add to all keys contained in this module
+	 * @param description answer to the question "What is this module used for?"
+	 */
+	public static <C> Configurator<C> control(C configuration, String name, String prefix, String description) {
+		ParameterField[] params = fetchParameters(configuration, prefix);
+		return new Configurator<C>(configuration, params, true, name, prefix, description);
+	}
+
+	private static ParameterField[] fetchParameters(Object config, String prefix) {
+		Class cc = config.getClass();
 		Field[] fields = cc.getDeclaredFields();
-		ArrayList<Parameter> conf = new ArrayList<Parameter>(fields.length);
+		ArrayList<ParameterField> conf = new ArrayList<ParameterField>(fields.length);
 		for (Field f : fields) {
-			Config c = f.getAnnotation(Config.class);
-			if (c != null) {
-				conf.add(Parameter.create(configuration, f, c, prefix));
+			Parameter p = f.getAnnotation(Parameter.class);
+			if (p != null) {
+				conf.add(ParameterField.create(config, f, p, prefix));
 			}
 		}
 		if (conf.isEmpty()) {
-			throw new ReflectionException("configuration class " + configuration.getClass().getName() +
-					" has no fields annotated with Config");
+			throw new ConfigurationException(
+					"configuration " +
+					cc +
+					" has no fields annotated with " +
+					Parameter.class.getSimpleName()
+			);
 		}
-		Parameter[] parameters = conf.toArray(new Parameter[conf.size()]);
+		ParameterField[] parameters = conf.toArray(new ParameterField[conf.size()]);
 		Arrays.sort(parameters);
-		return new Configurator<C>(configuration, parameters, module);
+		return parameters;
 	}
 
 	private final C config;
 	private final String[] keys;
-	private final Parameter[] parameters;
+	private final ParameterField[] parameters;
+	private final String name;
 	private final String prefix;
 	private final String description;
-	private final boolean module;
+	private final boolean isModule;
 
-	private Configurator(C config, Parameter[] parameters, ModuleConfig module) {
+	private Configurator(C config, ParameterField[] parameters,
+	                     boolean isModule, String name, String prefix, String doc) {
 		this.config = config;
 		String[] keys = new String[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -146,50 +119,53 @@ public final class Configurator<C> {
 		}
 		this.parameters = parameters;
 		this.keys = keys;
-		if (module != null) {
-			this.prefix = module.prefix();
-			this.description = module.desc();
-			this.module = true;
-		} else {
-			this.prefix = "";
-			this.description = "";
-			this.module = false;
-		}
+		this.isModule = isModule;
+		this.prefix = prefix == null ? "" : prefix;
+		this.description = doc == null ? "" : doc;
+		this.name = name == null || "".equals(name)
+				? config.getClass().getSimpleName()
+				: name;
 	}
 
 	/**
-	 * retrieves the configuration managed with this Configurator.
+	 * Retrieves the configuration managed with this <code>Configurator</code>.
 	 */
 	public C config() {
 		return config;
 	}
 
 	/**
-	 * reports whether the controlled configuration is a module.
-	 * It is a module when it is annotated with ModuleConfig.
+	 * Reports whether the controlled configuration is annotated with <code>Module</code>.
+	 * If it is, the methods <code>name</code>, <code>prefix</code> and <code>description</code>
+	 * retrieve its respective values.
 	 */
 	public boolean isModule() {
-		return module;
+		return isModule;
 	}
 
 	/**
-	 * return the module prefix or "".
-	 * "" is also a valid module prefix, use isModule() to differentiate.
+	 * Retrieves the name of the configuration module.
+	 */
+	public String name() {
+		return name;
+	}
+
+	/**
+	 * Retrieves the prefix of the configuration module.
 	 */
 	public String prefix() {
 		return prefix;
 	}
 
 	/**
-	 * return the module description or "".
-	 * "" is also a valid module description, use isModule() to differentiate.
+	 * Retrieves the description of the configuration module.
 	 */
 	public String description() {
 		return description;
 	}
 
 	/**
-	 * retrieves the keys of all available configuration options.
+	 * Retrieves the keys of all available configuration parameters for this module.
 	 */
 	public String[] keys() {
 		String[] keys = new String[parameters.length];
@@ -199,86 +175,112 @@ public final class Configurator<C> {
 		return keys;
 	}
 
+	private ParameterField parameter(String key) {
+		int i = Arrays.binarySearch(keys, key);
+		if (i < 0) {
+			return null;
+		}
+		return parameters[i];
+	}
+
 	/**
-	 * retrieves the description of the configuration option with the specified key.
-	 * The result may be an empty String but is never null.
+	 * Retrieves the description of the configuration parameter with the specified key.
+	 * If the key is unknown, <code>null</code> is returned.
 	 */
 	public String description(String key) {
-		int i = Arrays.binarySearch(keys, key);
-		if (i < 0) {
+		ParameterField p = parameter(key);
+		if (p == null) {
 			return null;
 		}
-		return parameters[i].desc;
+		return p.description;
 	}
 
 	/**
-	 * retrieves the default value of the configuration option with the specified key in String form.
-	 * The result may be null.
+	 * Retrieves the default value of the configuration option with the specified key in String form.
+	 * If the key is unknown, <code>null</code> is returned.
 	 */
 	public String defaultValue(String key) {
-		int i = Arrays.binarySearch(keys, key);
-		if (i < 0) {
+		ParameterField p = parameter(key);
+		if (p == null) {
 			return null;
 		}
-		return parameters[i].defval;
+		return p.defaultValue;
 	}
 
 	/**
-	 * retrieves the current value of the configuration option with the specified key in String form.
-	 * The result may be null.
+	 * Retrieves the available values for an enum field.
+	 * If the key is unknown, <code>null</code> is returned.
+	 * If the key does not belong to an enum, an empty array is returned.
+	 */
+	public String[] options(String key) {
+		ParameterField p = parameter(key);
+		if (p == null) {
+			return null;
+		}
+		return p.enumNames();
+	}
+
+	/**
+	 * Retrieves the description of an option - an enum value - for a parameter.
+	 * If the key or option is unknown, <code>null</code> is returned.
+	 * If the option has no Description annotation, "" is returned.
+	 */
+	public String description(String key, String option) {
+		ParameterField p = parameter(key);
+		if (p == null) {
+			return null;
+		}
+		Field field = p.enumValue(option);
+		if (field == null) {
+			return null;
+		}
+		return description(field);
+	}
+
+	/**
+	 * Retrieves the current value of the configuration option with the specified key in String form.
+	 * If the key is unknown, <code>null</code> is returned.
 	 */
 	public String value(String key) {
-		int i = Arrays.binarySearch(keys, key);
-		if (i < 0) {
+		ParameterField p = parameter(key);
+		if (p == null) {
 			return null;
 		}
-		return parameters[i].get(config);
+		return p.get(config);
 	}
 
 	/**
-	 * set configuration options.
-	 * The values are converted from String form to the format used by the configuration.
-	 * This may be used dynamically, e.g. to set a log level at runtime.
-	 * To support dynamic usage, the configuration fields must be read with synchronized
-	 * get-methods and must not be accessed directly. Their values also must not be cached.
+	 * Sets a configuration parameter and reports whether the key exists.
 	 */
-	public Configurator<C> process(ChangeEvent...ces) {
-		for (ChangeEvent ce : ces) {
-			for (Parameter p : parameters) {
-				if (p.key.equals(ce.key)) {
-					p.set(config, ce.value);
-				}
-			}
+	public boolean set(String key, String value) {
+		ParameterField p = parameter(key);
+		if (p == null) {
+			return false;
 		}
-		return this;
+		p.set(config, value);
+		return true;
 	}
 
 	/**
-	 * set all configuration options with the same keys as in data to the value stored in data.
-	 * The values from data are converted from String form to the format used by the configuration.
+	 * Sets multiple configuration parameters and reports whether all keys existed.
 	 */
-	public Configurator<C> process(Map<String, String> data) {
-		for (Map.Entry<String, String> e : data.entrySet()) {
-			int i = Arrays.binarySearch(keys, e.getKey());
-			if (i >= 0) {
-				parameters[i].set(config, e.getValue());
-			}
+	public boolean set(Map<String, String> configuration) {
+		boolean allExist = true;
+		for (Map.Entry<String, String> e : configuration.entrySet()) {
+			allExist &= set(e.getKey(), e.getValue());
 		}
-		return this;
+		return allExist;
 	}
 
 	/**
-	 * set all configuration options with the same keys as in data to the value stored in data.
-	 * The values from data are converted from String form to the format used by the configuration.
-	 * Each key and value stored in data must be a String.
+	 * Sets multiple configuration parameters and reports whether all keys existed.
+	 * Each key and each value stored in configuration must be a String.
 	 */
-	public Configurator<C> process(Properties data) {
-		for (Map.Entry<Object, Object> e : data.entrySet()) {
-			int i = Arrays.binarySearch(keys, e.getKey());
-			if (i >= 0) {
-				parameters[i].set(config, (String) e.getValue());
-			}
+	public boolean set(Properties configuration) {
+		boolean allExist = true;
+		for (Map.Entry<Object, Object> e : configuration.entrySet()) {
+			allExist &= set((String) e.getKey(), (String) e.getValue());
 		}
-		return this;
+		return allExist;
 	}
 }
