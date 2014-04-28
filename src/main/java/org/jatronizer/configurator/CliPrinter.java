@@ -101,7 +101,7 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 		if (enumNameDescPairs.length > 0) {
 			System.err.printf("\tavailable values:\n");
 			for (int i = 0; i < enumNameDescPairs.length; i+= 2) {
-				System.err.printf("\t  %s\t%s\n", enumNameDescPairs[i], enumNameDescPairs[i+1]);
+				System.err.printf("\t  %s:\t%s\n", enumNameDescPairs[i], enumNameDescPairs[i+1]);
 			}
 		}
 	}

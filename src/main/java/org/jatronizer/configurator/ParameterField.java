@@ -115,40 +115,25 @@ final class ParameterField<T> implements Comparable<ParameterField<T>> {
 	}
 
 	public String get(Object base) {
-		synchronized (base) {
-			try {
-				return converter.toString((T) (field.get(base)));
-			} catch (Exception e) {
-				try {
-					synchronized (base) {
-						field.setAccessible(true);
-						String value = converter.toString((T) (field.get(base)));
-						// not setting it back to false, see NOTE
-						return value;
-					}
-				} catch (Exception ex2) {
-					throw new ConfigurationException(ex2);
-				}
+		try {
+			T value = null;
+			synchronized (base) {
+				value = (T) field.get(base);
 			}
+			return converter.toString(value);
+		} catch (Exception e) {
+			throw new IllegalValueException("could not get the value of " + field, e);
 		}
 	}
 
 	public void set(Object base, String value) {
-		Object v = converter.valueOf(value);
 		try {
+			T v = (T) converter.valueOf(value);
 			synchronized (base) {
 				field.set(base, v);
 			}
-		} catch (IllegalAccessException ex) {
-			try {
-				synchronized (base) {
-					field.setAccessible(true);
-					field.set(base, v);
-					// not setting it back to false, see NOTE
-				}
-			} catch (Exception ex2) {
-				throw new ConfigurationException(ex2);
-			}
+		} catch (Exception e) {
+			throw new IllegalValueException("could not set the value of " + field, e);
 		}
 	}
 
