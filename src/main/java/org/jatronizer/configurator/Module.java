@@ -14,13 +14,13 @@ public @interface Module {
 
 	/**
 	 * Returns the name of this module.
-	 * Callers of this method should use <code>getClass().getSimpleName()</code> as the name if this is "".
+	 * Callers of this method should use {@code getClass().getSimpleName()} as the name if this is {@code ""}.
 	 */
 	String name() default "";
 
 	/**
-	 * Returns the prefix used for all <code>Config</code> keys this class contains.
-	 * To make modules distinguishable, the prefix should end in a separator (e.g. "/").
+	 * Returns the prefix used for all {@code Parameter} keys this class contains.
+	 * To make modules distinguishable, the prefix should end in a separator (e.g. {@code /}).
 	 */
 	String prefix() default "";
 }

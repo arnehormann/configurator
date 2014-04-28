@@ -48,8 +48,8 @@ public class Configuration {
 		};
 		WarnConfig warn = new WarnConfig();
 		NewsConfig news = new NewsConfig();
-		CliConfiguration conf = new CliConfiguration("myapp-", args, warn, news);
-		conf.walk(new CliPrinter(), new CliPrinter());
+		MainConfigurator conf = new MainConfigurator("myapp-", args, warn, news);
+		conf.walk(new HelpPrinter(), new HelpPrinter());
 		String[] unknownArgs = conf.unknownArgs();
 		if (unknownArgs.length > 0) {
 			System.out.println("Unknown arguments:");

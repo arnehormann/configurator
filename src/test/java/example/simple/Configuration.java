@@ -1,7 +1,7 @@
 package example.simple;
 
-import org.jatronizer.configurator.CliConfiguration;
-import org.jatronizer.configurator.CliPrinter;
+import org.jatronizer.configurator.MainConfigurator;
+import org.jatronizer.configurator.HelpPrinter;
 import org.jatronizer.configurator.Description;
 import org.jatronizer.configurator.Parameter;
 
@@ -36,8 +36,8 @@ public class Configuration {
 	public static final Configuration INSTANCE = new Configuration();
 
 	public static void main(String[] args) {
-		CliConfiguration conf = new CliConfiguration("myapp-", args, INSTANCE);
-		conf.walk(new CliPrinter(), new CliPrinter());
+		MainConfigurator conf = new MainConfigurator("myapp-", args, INSTANCE);
+		conf.walk(new HelpPrinter(), new HelpPrinter());
 		if (INSTANCE.debug) {
 			System.out.println("Debug was set");
 		}

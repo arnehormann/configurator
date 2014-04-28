@@ -11,7 +11,7 @@ import java.util.*;
  * options in one place and provides tools to simplify generating specific help texts and examples.
  * It also closely couples code and description and keeps them in sync.
  *
- * The configuration takes the form of an Object of any type with <code>@Parameter</code> annotated fields.
+ * The configuration takes the form of an Object of any type with {@code @Parameter} annotated fields.
  * The field name, type and additional optional information from the annotation are used to populate the fields
  * from specified sources. Configuration changes at runtime are possible, too.
  *
@@ -27,7 +27,7 @@ import java.util.*;
 public final class Configurator<C> {
 
 	/**
-	 * Retrieves the description of a Class, one of its fields or an enum value.
+	 * Retrieves the description of a Class, one of its fields or of an {@code enum} value.
 	 */
 	public static String description(AnnotatedElement elem) {
 		Description d = elem.getAnnotation(Description.class);
@@ -39,14 +39,14 @@ public final class Configurator<C> {
 
 	/**
 	 * Creates a configuration manager.
-	 * The configuration is an object with fields annotated with <code>Parameter</code>.
+	 * The configuration is an object with fields annotated with {@code Parameter}.
 	 * @param configuration an instance of a configuration.
 	 *               It is used by the builder to determine available fields and their types
 	 *               and to get their default values (the one set on the instance passed here).
 	 *               The Configurator assumes ownership - you should not write to any of the fields
 	 *               yourself. Read access to fields have to be synchronized on the configuration object
 	 *               when concurrent accesses are possible.
-	 *               <code>Module</code> and <code>Description</code> annotations are processed.
+	 *               {@code Module} and {@code Description} annotations are processed.
 	 */
 	public static <C> Configurator<C> control(C configuration) {
 		Class cc = configuration.getClass();
@@ -63,14 +63,14 @@ public final class Configurator<C> {
 
 	/**
 	 * Creates a configuration manager.
-	 * The configuration is an object with fields annotated with <code>Parameter</code>.
+	 * The configuration is an object with fields annotated with {@code Parameter}.
 	 * @param configuration an instance of a configuration.
 	 *               It is used by the builder to determine available fields and their types
 	 *               and to get their default values (the one set on the instance passed here).
 	 *               The Configurator assumes ownership - you should not write to any of the fields
 	 *               yourself. Read access to fields have to be synchronized on the configuration object
 	 *               when concurrent accesses are possible.
-	 * @param name mocule name
+	 * @param name module name
 	 * @param prefix prefix to add to all keys contained in this module
 	 * @param description answer to the question "What is this module used for?"
 	 */
@@ -128,16 +128,15 @@ public final class Configurator<C> {
 	}
 
 	/**
-	 * Retrieves the configuration managed with this <code>Configurator</code>.
+	 * Retrieves the configuration managed with this {@code Configurator}.
 	 */
 	public C config() {
 		return config;
 	}
 
 	/**
-	 * Reports whether the controlled configuration is annotated with <code>Module</code>.
-	 * If it is, the methods <code>name</code>, <code>prefix</code> and <code>description</code>
-	 * retrieve its respective values.
+	 * Reports whether the controlled configuration is annotated with {@code Module}.
+	 * If it is, the methods {@code name}, {@code prefix} retrieve its respective values.
 	 */
 	public boolean isModule() {
 		return isModule;
@@ -185,7 +184,7 @@ public final class Configurator<C> {
 
 	/**
 	 * Retrieves the description of the configuration parameter with the specified key.
-	 * If the key is unknown, <code>null</code> is returned.
+	 * If the key is unknown, {@code null} is returned.
 	 */
 	public String description(String key) {
 		ParameterField p = parameter(key);
@@ -196,8 +195,8 @@ public final class Configurator<C> {
 	}
 
 	/**
-	 * Retrieves the default value of the configuration option with the specified key in String form.
-	 * If the key is unknown, <code>null</code> is returned.
+	 * Retrieves the default value of the configuration option with the specified key in {@code String} form.
+	 * If the key is unknown, {@code null} is returned.
 	 */
 	public String defaultValue(String key) {
 		ParameterField p = parameter(key);
@@ -208,9 +207,9 @@ public final class Configurator<C> {
 	}
 
 	/**
-	 * Retrieves the available values for an enum field.
-	 * If the key is unknown, <code>null</code> is returned.
-	 * If the key does not belong to an enum, an empty array is returned.
+	 * Retrieves the available values for an {@code enum} field.
+	 * If the key is unknown, {@code null} is returned.
+	 * If the key does not belong to an enum parameter, an empty array is returned.
 	 */
 	public String[] options(String key) {
 		ParameterField p = parameter(key);
@@ -221,16 +220,17 @@ public final class Configurator<C> {
 	}
 
 	/**
-	 * Retrieves the description of an option - an enum value - for a parameter.
-	 * If the key or option is unknown, <code>null</code> is returned.
-	 * If the option has no Description annotation, "" is returned.
+	 * Retrieves the description of an option for a parameter.
+	 * Options are valid values of an {@code enum}.
+	 * If the key or option is unknown, {@code null} is returned.
+	 * If the option is not annotated with {@code Description}, {@code ""} is returned.
 	 */
 	public String description(String key, String option) {
 		ParameterField p = parameter(key);
 		if (p == null) {
 			return null;
 		}
-		Field field = p.enumValue(option);
+		Field field = p.enumField(option);
 		if (field == null) {
 			return null;
 		}
@@ -238,8 +238,8 @@ public final class Configurator<C> {
 	}
 
 	/**
-	 * Retrieves the current value of the configuration option with the specified key in String form.
-	 * If the key is unknown, <code>null</code> is returned.
+	 * Retrieves the current value of the configuration option with the specified key in {@code String} form.
+	 * If the key is unknown, {@code null} is returned.
 	 */
 	public String value(String key) {
 		ParameterField p = parameter(key);
@@ -274,7 +274,7 @@ public final class Configurator<C> {
 
 	/**
 	 * Sets multiple configuration parameters and reports whether all keys existed.
-	 * Each key and each value stored in configuration must be a String.
+	 * Each key and each value stored in configuration must be a {@code String}.
 	 */
 	public boolean set(Properties configuration) {
 		boolean allExist = true;

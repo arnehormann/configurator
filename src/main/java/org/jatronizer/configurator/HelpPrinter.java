@@ -1,8 +1,14 @@
 package org.jatronizer.configurator;
 
-public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfiguration.ParameterVisitor {
+import java.io.PrintStream;
+
+/**
+ * HelpPrinter provides a default format to display values.
+ */
+public class HelpPrinter implements MainConfigurator.ModuleVisitor, MainConfigurator.ParameterVisitor {
 
 	private static enum AnsiMode {
+		// see http://en.wikipedia.org/wiki/ANSI_escape_code
 		//reset(0),
 		bold(1),
 		//blink(5),
@@ -29,17 +35,17 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 		private AnsiMode(int code) {
 			this.code = "" + code;
 		}
-	}
 
-	private static String wrap(String text, AnsiMode...mode) {
-		if (mode.length == 0) {
-			return text;
+		public static String wrap(String text, AnsiMode...mode) {
+			if (mode.length == 0) {
+				return text;
+			}
+			String result = "\u001b[" + mode[0].code;
+			for (int i = 1; i < mode.length; i++) {
+				result += ";" + mode[i].code;
+			}
+			return result + "m" + text + "\u001b[0m";
 		}
-		String result = "\u001b[" + mode[0].code;
-		for (int i = 1; i < mode.length; i++) {
-			result += ";" + mode[i].code;
-		}
-		return result + "m" + text + "\u001b[0m";
 	}
 
 	private static final String TEXT_KEY;
@@ -50,14 +56,13 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 	private static final String TEXT_DEFAULT;
 
 	static {
-		// see http://en.wikipedia.org/wiki/ANSI_escape_code
 		if ("1".equals(System.getenv("CLICOLOR"))) {
-			TEXT_KEY     = wrap("%1$s",AnsiMode.fgWhite,  AnsiMode.bgGreen);
-			TEXT_ARG_KEY = wrap("%2$s",AnsiMode.fgWhite,  AnsiMode.bgCyan);
-			TEXT_ENV_KEY = wrap("%3$s",AnsiMode.fgWhite,  AnsiMode.bgBlue);
-			TEXT_DESCRIPTION  = "%4$s";
-			TEXT_VALUE   = wrap("%5$s",AnsiMode.fgYellow, AnsiMode.bgBlack);
-			TEXT_DEFAULT = wrap("%6$s",AnsiMode.fgCyan,   AnsiMode.bgBlack);
+			TEXT_KEY         = AnsiMode.wrap("%1$s",AnsiMode.fgWhite,  AnsiMode.bgGreen);
+			TEXT_ARG_KEY     = AnsiMode.wrap("%2$s",AnsiMode.fgWhite,  AnsiMode.bgCyan);
+			TEXT_ENV_KEY     = AnsiMode.wrap("%3$s",AnsiMode.fgWhite,  AnsiMode.bgBlue);
+			TEXT_DESCRIPTION = "%4$s";
+			TEXT_VALUE       = AnsiMode.wrap("%5$s",AnsiMode.fgYellow, AnsiMode.bgBlack);
+			TEXT_DEFAULT     = AnsiMode.wrap("%6$s",AnsiMode.fgCyan,   AnsiMode.bgBlack);
 		} else {
 			TEXT_KEY         = "%1$s";
 			TEXT_ARG_KEY     = "%2$s";
@@ -66,6 +71,16 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 			TEXT_VALUE       = "%5$s";
 			TEXT_DEFAULT     = "%6$s";
 		}
+	}
+
+	private PrintStream out;
+
+	public HelpPrinter() {
+		this(System.err);
+	}
+
+	public HelpPrinter(PrintStream out) {
+		this.out = out;
 	}
 
 	public void visit(String name, String prefix, String description) {
@@ -79,7 +94,7 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 	}
 
 	public void visit(String key, String argKey, String envKey, String defaultValue, String value, String description,
-	                  String...enumNameDescPairs) {
+	                  String...optionDescPairs) {
 		String format = "[" + TEXT_KEY + "] / [" + TEXT_ARG_KEY + "] / [" + TEXT_ENV_KEY + "]\n";
 		if (!"".equals(description)) {
 			format += "\t" + TEXT_DESCRIPTION + "\n";
@@ -98,10 +113,13 @@ public class CliPrinter implements CliConfiguration.ModuleVisitor, CliConfigurat
 			}
 		}
 		System.err.printf(format, key, argKey, envKey, description, value, defaultValue);
-		if (enumNameDescPairs.length > 0) {
+		if (optionDescPairs.length > 0) {
+			if (optionDescPairs.length % 2 != 0) {
+				throw new ConfigurationException("optionDescPairs must be pairs of name, value entries");
+			}
 			System.err.printf("\tavailable values:\n");
-			for (int i = 0; i < enumNameDescPairs.length; i+= 2) {
-				System.err.printf("\t  %s:\t%s\n", enumNameDescPairs[i], enumNameDescPairs[i+1]);
+			for (int i = 0; i < optionDescPairs.length; i+= 2) {
+				System.err.printf("\t  %s:\t%s\n", optionDescPairs[i], optionDescPairs[i+1]);
 			}
 		}
 	}

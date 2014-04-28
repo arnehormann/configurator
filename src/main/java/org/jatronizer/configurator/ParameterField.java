@@ -7,7 +7,7 @@ import java.util.Comparator;
 
 final class ParameterField<T> implements Comparable<ParameterField<T>> {
 
-	private static void forceAccessible(AccessibleObject...objects) {
+	static void forceAccessible(AccessibleObject...objects) {
 		for (AccessibleObject ao : objects) {
 			if (!ao.isAccessible()) {
 				ao.setAccessible(true);
@@ -40,8 +40,8 @@ final class ParameterField<T> implements Comparable<ParameterField<T>> {
 		}
 		key = prefix + key;
 		Converter converter = null;
-		if (parameter.convert() == DefaultConverter.class) {
-			converter = DefaultConverter.getFor(field.getType());
+		if (parameter.convert() == NullConverter.class) {
+			converter = DefaultConverters.getFor(field.getType());
 		}
 		String defaultValue;
 		if (converter == null) {
@@ -116,7 +116,7 @@ final class ParameterField<T> implements Comparable<ParameterField<T>> {
 
 	public String get(Object base) {
 		try {
-			T value = null;
+			T value;
 			synchronized (base) {
 				value = (T) field.get(base);
 			}
@@ -128,7 +128,7 @@ final class ParameterField<T> implements Comparable<ParameterField<T>> {
 
 	public void set(Object base, String value) {
 		try {
-			T v = (T) converter.valueOf(value);
+			T v = converter.valueOf(value);
 			synchronized (base) {
 				field.set(base, v);
 			}
@@ -145,7 +145,7 @@ final class ParameterField<T> implements Comparable<ParameterField<T>> {
 		return enumNames.clone();
 	}
 
-	public Field enumValue(String name) {
+	public Field enumField(String name) {
 		int i = Arrays.binarySearch(enumNames, name);
 		if (i < 0) {
 			return null;

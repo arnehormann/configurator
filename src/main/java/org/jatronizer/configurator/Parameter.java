@@ -14,13 +14,13 @@ public @interface Parameter {
 
 	/**
 	 * Returns the internal key used to access this value.
-	 * Callers of this method should use the field name if the value is "".
+	 * Callers of this method should use the field name if the value is {@code ""}.
 	 */
 	String key() default "";
 
 	/**
-	 * Returns a class used to convert between the parameter type and its String representation.
+	 * Returns a class used to convert between the parameter type and its {@code String} representation.
 	 * The class must have a public constructor taking no arguments.
 	 */
-	Class<? extends Converter> convert() default DefaultConverter.class;
+	Class<? extends Converter> convert() default NullConverter.class;
 }

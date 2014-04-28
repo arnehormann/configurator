@@ -1,9 +1,8 @@
 package org.jatronizer.configurator;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
-public class CliConfiguration {
+public class MainConfigurator {
 
 	public static interface ModuleVisitor {
 		void visit(String name, String prefix, String description);
@@ -73,7 +72,7 @@ public class CliConfiguration {
 	private final String argAssign;
 	private final String envPrefix;
 
-	public CliConfiguration(String envPrefix, String[] args, Object...configurations) {
+	public MainConfigurator(String envPrefix, String[] args, Object... configurations) {
 		this.argPrefix = "-";
 		this.argAssign = "=";
 		this.envPrefix = envPrefix == null ? "" : envPrefix;
