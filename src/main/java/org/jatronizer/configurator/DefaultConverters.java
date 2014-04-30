@@ -11,6 +11,7 @@ public final class DefaultConverters {
 	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
 	 * If no fitting converter exists, it returns {@code null}.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> Converter<T> getFor(Class<T> c) {
 		if (c == null || c == Void.class) {
 			return (Converter<T>) NULL_CONVERTER;
@@ -52,8 +53,16 @@ public final class DefaultConverters {
 	 * Converts between the Strings "true" or "false" and their representations as Boolean
 	 */
 	public static final Converter<Boolean> BOOLEAN_CONVERTER = new Converter<Boolean>() {
-		public Boolean fromString(String value) {return Boolean.valueOf(value);}
-		public String toString(Boolean value) {return Boolean.toString(value);}
+		public Boolean fromString(String value) {
+			if ("false".equals(value)) {
+				return Boolean.FALSE;
+			}
+			if ("true".equals(value)) {
+				return Boolean.TRUE;
+			}
+			throw new IllegalValueException("\"" + value + "\" is not a boolean");
+		}
+		public String toString(Boolean value) {return value.toString();}
 		public String toString() {return "BooleanConverter";}
 	};
 
@@ -63,7 +72,7 @@ public final class DefaultConverters {
 	public static final Converter<Character> CHAR_CONVERTER = new Converter<Character>() {
 		public Character fromString(String value) {
 			if (value.length() != 1) {
-				throw new RuntimeException("must be a single character");
+				throw new RuntimeException("value is not exactly one char long");
 			}
 			return value.charAt(0);
 		}
@@ -200,6 +209,7 @@ public final class DefaultConverters {
 		/**
 		 * {@inheritDoc}
 		 */
+		@SuppressWarnings("unchecked")
 		public P fromString(String value) {
 			try {
 				return (P) valueOf.invoke(null, value);

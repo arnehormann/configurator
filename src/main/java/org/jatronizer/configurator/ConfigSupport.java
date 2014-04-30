@@ -6,17 +6,24 @@ import java.util.*;
 
 final class ConfigSupport {
 
-	// Can not be instanciated
+	// Can not be instantiated
 	private ConfigSupport() {}
 
 	public static ConfigParameter[] fetchParameters(Object config, String keyPrefix) {
 		Class cc = config.getClass();
 		Field[] fields = cc.getDeclaredFields();
 		ArrayList<ConfigParameter> conf = new ArrayList<ConfigParameter>(fields.length);
+		if (keyPrefix == null) {
+			keyPrefix = "";
+		}
 		for (Field f : fields) {
 			Parameter p = f.getAnnotation(Parameter.class);
 			if (p != null) {
-				conf.add(ConfigParameterField.create(config, f, p.key(), p.convert(), keyPrefix));
+				String key = p.key();
+				if ("".equals(key)) {
+					key = f.getName();
+				}
+				conf.add(ConfigParameterField.create(config, f, keyPrefix + key, p.convert()));
 			}
 		}
 		if (conf.isEmpty()) {
@@ -93,7 +100,7 @@ final class ConfigSupport {
 		return result;
 	}
 
-	public static int setValues(
+	public static int values(
 			Map<String, String> dst,
 			String[] keys, String keyPrefix, KeyFormatter format,
 			Map<String, String> src) {
@@ -114,10 +121,10 @@ final class ConfigSupport {
 		return numSet;
 	}
 
-	public static int setParsedValues(
+	public static int parseValues(
 			Map<String, String> dst, Collection<String> dstUnused,
 			String[] keys, String keyPrefix, KeyFormatter format,
-			String...src) {
+			String... src) {
 		if (keyPrefix == null) {
 			keyPrefix = "";
 		}

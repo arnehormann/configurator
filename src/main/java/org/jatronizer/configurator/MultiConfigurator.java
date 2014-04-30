@@ -33,7 +33,7 @@ final class MultiConfigurator implements Configurator {
 				return o1.key.compareTo(o2.key);
 			}
 		});
-		// generate mapping from key to configurator
+		// generate mapping from key to configurator and check uniqueness of keys
 		int[] keyToConfigurator = new int[keys.length];
 		String lastKey = null;
 		for (int i = 0; i < keys.length; i++) {

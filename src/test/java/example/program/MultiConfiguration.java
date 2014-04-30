@@ -1,8 +1,8 @@
-package example.multi;
+package example.program;
 
 import org.jatronizer.configurator.*;
 
-public class Configuration {
+public class MultiConfiguration {
 	public static class MailConfig {
 		@Parameter(key = "login")
 		@Description("login used for the smtp account")
@@ -24,14 +24,14 @@ public class Configuration {
 		MailConfig warn = new MailConfig();
 		MailConfig news = new MailConfig();
 		Configurator conf = ConfigManager.manage(
-			ConfigManager.module(
-					warn, "warnmails", "smtp/warn/",
-					"SMTP Account for log messages with level WARN and up"
-			),
-			ConfigManager.module(
-					news, "mailinglist", "smtp/news/",
-					"SMTP Account for newsletter"
-			)
+				ConfigManager.module(
+						warn, "warnmails", "smtp/warn/",
+						"SMTP Account for log messages with level WARN and up"
+				),
+				ConfigManager.module(
+						news, "mailinglist", "smtp/news/",
+						"SMTP Account for newsletter"
+				)
 		);
 		// override to show the effect
 		args = new String[]{

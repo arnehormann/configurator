@@ -19,8 +19,8 @@ public @interface Module {
 	String name() default "";
 
 	/**
-	 * Returns the keyPrefix used for all configure parameters this class contains.
-	 * To make modules distinguishable, the keyPrefix should end in a separator (e.g. "{@code /}").
+	 * Returns the key prefix used for all configure parameters this class contains.
+	 * To make modules distinguishable, {@code keyPrefix} should end in a separator (e.g. "{@code /}").
 	 */
 	String keyPrefix() default "";
 }

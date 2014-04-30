@@ -1,11 +1,11 @@
-package example.simple;
+package example.program;
 
 import org.jatronizer.configurator.ConfigManager;
 import org.jatronizer.configurator.Configurator;
 import org.jatronizer.configurator.Description;
 import org.jatronizer.configurator.Parameter;
 
-public class Configuration {
+public class SingleConfiguration {
 	private static enum Colors {
 		@Description("the grass is always growing on the other side")
 		green,
@@ -33,7 +33,7 @@ public class Configuration {
 	@Parameter
 	private boolean debug = false;
 
-	public static final Configuration INSTANCE = new Configuration();
+	public static final SingleConfiguration INSTANCE = new SingleConfiguration();
 
 	public static void main(String[] args) {
 		final String APP_PREFIX = "myapp/";

@@ -2,6 +2,7 @@ package org.jatronizer.configurator;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -22,23 +23,26 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	private final String[] enumNames;
 	private final Field[] enumFields;
 
-	static <C,P> ConfigParameterField<C,P> create(
+	@SuppressWarnings("unchecked")
+	public static <C,P> ConfigParameterField<C,P> create(
 			C configuration, Field field, String key,
-			Class<P> converterClass, String keyPrefix) {
-		String description = ConfigSupport.description(field);
-		if (keyPrefix == null) {
-			keyPrefix = "";
+			Class<P> converterClass) {
+		if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) != 0) {
+			// static fields can not be set on instances
+			// final could have been optimized and may not have an effect
+			throw new ConfigurationException(field.toString() + " must not be static or final");
 		}
+		if (configuration.getClass() != field.getDeclaringClass()) {
+			throw new ConfigurationException(field.toString() + " is not declared on " + configuration.getClass());
+		}
+		String description = ConfigSupport.description(field);
 		if (key == null || "".equals(key)) {
 			key = field.getName();
 		}
-		key = keyPrefix + key;
-		Converter<P> converter = null;
+		Converter<P> converter;
 		if (converterClass == null || converterClass == DefaultConverters.NullConverter.class) {
 			converter = DefaultConverters.getFor((Class<P>) field.getType());
-		}
-		String defaultValue;
-		if (converter == null) {
+		} else {
 			try {
 				converter = (Converter<P>) converterClass.newInstance();
 			} catch (Exception e) {
@@ -78,6 +82,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 				throw new ConfigurationException("Could not access enum values of " + c, e);
 			}
 		}
+		String defaultValue;
 		synchronized (configuration) {
 			P value;
 			try {
@@ -139,6 +144,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public String get(C configuration) {
 		try {
 			P value;
@@ -172,6 +178,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public Class<P> type() {
 		return (Class<P>) field.getType();
 	}
@@ -223,6 +230,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public Class<C> outerType() {
 		return (Class<C>) field.getDeclaringClass();
 	}
@@ -237,6 +245,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean equals(Object other) {
 		if (this == other) {
 			return true;
@@ -248,7 +257,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		return
 				key.equals(opf.key) &&
 				field.equals(opf.field) &&
-				converter.equals(opf.hashCode())
+				converter.equals(opf.converter)
 		;
 	}
 

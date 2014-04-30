@@ -5,6 +5,9 @@ package org.jatronizer.configurator;
  * between the parameter type and {@code String} fails.
  */
 public class IllegalValueException extends RuntimeException {
+	public IllegalValueException(String msg) {
+		super(msg);
+	}
 	public IllegalValueException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
