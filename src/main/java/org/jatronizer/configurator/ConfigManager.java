@@ -166,7 +166,7 @@ public final class ConfigManager {
 	 *               If {@code params} is empty, the result of {@link #parameters(Object, String)} is used.
 	 * @param <C> Type of the configuration.
 	 */
-	public static <C> Configurator<C> module(
+	public static <C> Configurator module(
 			C configuration, String name, String keyPrefix, String description, ConfigParameter... params) {
 		if (configuration == null) {
 			throw new NullPointerException("configuration is null");
@@ -187,7 +187,7 @@ public final class ConfigManager {
 	 *              This is only used for consistency here so {@code C} denotes a configuration type.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <C> Configurator<C> configure(C... configurations) {
+	public static <C> Configurator configure(C... configurations) {
 		if (configurations.length == 0) {
 			throw new ConfigurationException("configurations are empty");
 		}
@@ -198,7 +198,7 @@ public final class ConfigManager {
 			throw new ConfigurationException("Wrong function, call manage instead of configure");
 		}
 		// create all configurators
-		Configurator<C>[] configurators = new Configurator[configurations.length];
+		Configurator[] configurators = new Configurator[configurations.length];
 		for (int i = 0; i < configurations.length; i++) {
 			configurators[i] = InstanceConfigurator.control(configurations[i]);
 		}
@@ -208,11 +208,9 @@ public final class ConfigManager {
 	/**
 	 * Creates a {@link Configurator} wrapping multiple other configurators.
 	 * @param configurators The configurators to be wrapped.
-	 * @param <C> A common type for all configurations.
-	 *              This is only used for consistency here so {@code C} denotes a configuration type.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <C> Configurator<C> manage(Configurator<C>... configurators) {
+	public static Configurator manage(Configurator... configurators) {
 		if (configurators.length == 0) {
 			throw new ConfigurationException("configurators are empty");
 		}

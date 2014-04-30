@@ -22,7 +22,7 @@ import java.util.*;
  *
  * @param <C> the type of the configure instance
  */
-final class InstanceConfigurator<C> implements Configurator<C> {
+final class InstanceConfigurator<C> implements Configurator {
 
 	/**
 	 * Creates a configure manager.
@@ -35,6 +35,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 	 *               when concurrent accesses are possible.
 	 *               {@link Module} and {@link Description} annotations are processed.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <C> InstanceConfigurator<C> control(C configuration) {
 		Class cc = configuration.getClass();
 		Module module = (Module) cc.getAnnotation(Module.class);
@@ -46,8 +47,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 		}
 		ConfigParameter[] params = ConfigSupport.fetchParameters(configuration, keyPrefix);
 		return new InstanceConfigurator<C>(
-				configuration, params, module != null,
-				name, keyPrefix, ConfigSupport.description(cc)
+				configuration, params, name, ConfigSupport.description(cc)
 		);
 	}
 
@@ -63,7 +63,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 	 * @param params Managed configure parameters, must all represent fields on {@code configure}.
 	 */
 	public static <C> InstanceConfigurator<C> control(
-			C configuration, String name, String keyPrefix, String description, ConfigParameter[] params) {
+			C configuration, String name, String keyPrefix, String description, ConfigParameter<C,?>[] params) {
 		// to synchronize access on an instance, check that all params share the same declaring class
 		Class configType = configuration.getClass();
 		for (ConfigParameter param : params) {
@@ -71,20 +71,18 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 				throw new ConfigurationException("All configure parameters must belong to " + configType);
 			}
 		}
-		return new InstanceConfigurator<C>(configuration, params, true, name, keyPrefix, description);
+		return new InstanceConfigurator<C>(configuration, params, name, description);
 	}
 
 	private final C config;
 	private final String[] keys;
 	private final ConfigParameter[] parameters;
 	private final String name;
-	private final String prefix;
 	private final String description;
-	private final boolean isModule;
 
 	private InstanceConfigurator(
 			C config, ConfigParameter[] parameters,
-			boolean isModule, String name, String prefix, String desc) {
+			String name, String desc) {
 		this.config = config;
 		String[] keys = new String[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -92,14 +90,13 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 		}
 		this.parameters = parameters;
 		this.keys = keys;
-		this.isModule = isModule;
-		this.prefix = prefix == null ? "" : prefix;
 		this.description = desc == null ? "" : desc;
 		this.name = name == null || "".equals(name)
 				? config.getClass().getSimpleName()
 				: name;
 	}
 
+	@SuppressWarnings("unchecked")
 	private ConfigParameter field(String key) {
 		int i = Arrays.binarySearch(keys, key);
 		if (i < 0) {
@@ -136,6 +133,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public String value(String key) {
 		ConfigParameter p = field(key);
 		if (p == null) {
@@ -147,6 +145,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public int set(String key, String value) {
 		ConfigParameter p = field(key);
 		if (p == null) {
@@ -185,6 +184,7 @@ final class InstanceConfigurator<C> implements Configurator<C> {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	public void walk(ConfigurationVisitor v) {
 		v.visitModule(name, description, this);
 		for (ConfigParameter field : parameters) {

@@ -1,9 +1,9 @@
 package org.jatronizer.configurator;
 
 /**
- * Represents a managed configure parameter.
- * @param <C> Type of the field represented by the {@code ConfigParameter} is declared in.
- * @param <P> Type of the configure parameter.
+ * Represents a managed configuration parameter.
+ * @param <C> Type containing the field represented by the {@code ConfigParameter}.
+ * @param <P> Type of the configuration parameter.
  */
 public interface ConfigParameter<C,P> extends Converter<P> {
 	/**
@@ -12,23 +12,23 @@ public interface ConfigParameter<C,P> extends Converter<P> {
 	String key();
 
 	/**
-	 * Retrieves the default value of the configure parameter in {@code String} form.
+	 * Retrieves the default value of the configuration parameter in {@code String} form.
 	 */
 	String defaultValue();
 
 	/**
-	 * Retrieves the description of this configure parameter.
+	 * Retrieves the description of this configuration parameter.
 	 * If it is not annotated with {@link Description}, {@code ""} is returned.
 	 */
 	String description();
 
 	/**
-	 * Retrieves the type of the configure parameter.
+	 * Retrieves the type of the configuration parameter.
 	 */
 	Class<P> type();
 
 	/**
-	 * Retrieves the type of the field represented by the {@code ConfigParameter} is declared in.
+	 * Retrieves the type containing the field represented by the {@code ConfigParameter}.
 	 */
 	Class<C> outerType();
 
@@ -48,13 +48,12 @@ public interface ConfigParameter<C,P> extends Converter<P> {
 	String description(String option);
 
 	/**
-	 * Retrieves the {@code String} form of the configure parameter on the specified configure instance.
+	 * Retrieves the {@code String} form of the configuration parameter on the specified configure instance.
 	 */
 	String get(C configuration);
 
 	/**
-	 * Sets the configure parameter on the specified configure instance to a value given in {@code String}
-	 * format.
+	 * Sets the configure parameter on the specified configuration instance to a value given in {@code String} format.
 	 */
 	void set(C configuration, String value);
 }

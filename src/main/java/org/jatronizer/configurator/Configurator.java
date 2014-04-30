@@ -3,7 +3,7 @@ package org.jatronizer.configurator;
 import java.util.Map;
 import java.util.Properties;
 
-public interface Configurator<C> {
+public interface Configurator {
 
 	/**
 	 * Reports whether the configurator manages a parameter with the specified key.
@@ -19,7 +19,7 @@ public interface Configurator<C> {
 	 * Retrieves the parameter with the specified {@code key}.
 	 * Returns {@code null} if no parameter with that key exists.
 	 */
-	<P> ConfigParameter<C,P> parameter(String key);
+	ConfigParameter parameter(String key);
 
 	/**
 	 * Retrieves the current value of the configure option with the specified key in {@code String} form.

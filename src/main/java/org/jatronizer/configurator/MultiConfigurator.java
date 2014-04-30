@@ -120,7 +120,7 @@ final class MultiConfigurator implements Configurator {
 	/**
 	 * {@inheritDoc}
 	 */
-	public int set(Map configuration) {
+	public int set(Map<String, String> configuration) {
 		int numSet = 0;
 		for (Configurator configurator : configurators) {
 			numSet += configurator.set(configuration);
@@ -142,6 +142,7 @@ final class MultiConfigurator implements Configurator {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unsafe")
 	public void walk(ConfigurationVisitor v) {
 		for (Configurator conf : configurators) {
 			conf.walk(v);
