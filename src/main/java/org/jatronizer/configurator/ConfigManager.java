@@ -5,10 +5,7 @@ import static org.jatronizer.configurator.ConfigSupport.KeyFormat.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public final class ConfigManager {
 
@@ -253,6 +250,12 @@ public final class ConfigManager {
 	 * @return The number of pairs that were or would have been stored in {@code dst}.
 	 */
 	public static int getArgs(Map<String, String> dst, Collection<String> dstUnused, String[] keys, String...args) {
+		String[] collisions = ConfigSupport.collisions(arg, keys);
+		if (collisions.length > 0) {
+			throw new ConfigurationException("collisions for command line argument keys: " +
+					Arrays.toString(collisions)
+			);
+		}
 		return ConfigSupport.parseValues(dst, dstUnused, keys, ARG_PREFIX, arg, args);
 	}
 
@@ -267,6 +270,12 @@ public final class ConfigManager {
 	 * @return The number of pairs that were or would have been stored in {@code dst}.
 	 */
 	public static int getEnv(Map<String, String> dst, String[] keys, String envVarPrefix) {
+		String[] collisions = ConfigSupport.collisions(env, keys);
+		if (collisions.length > 0) {
+			throw new ConfigurationException("collisions for environment keys: " +
+					Arrays.toString(collisions)
+			);
+		}
 		return ConfigSupport.values(dst, keys, envVarPrefix, env, System.getenv());
 	}
 
