@@ -1,7 +1,7 @@
 package example.simple;
 
-import org.jatronizer.configurator.MainConfigurator;
-import org.jatronizer.configurator.HelpPrinter;
+import org.jatronizer.configurator.ConfigManager;
+import org.jatronizer.configurator.Configurator;
 import org.jatronizer.configurator.Description;
 import org.jatronizer.configurator.Parameter;
 
@@ -36,16 +36,18 @@ public class Configuration {
 	public static final Configuration INSTANCE = new Configuration();
 
 	public static void main(String[] args) {
-		MainConfigurator conf = new MainConfigurator("myapp-", args, INSTANCE);
-		conf.walk(new HelpPrinter(), new HelpPrinter());
+		final String APP_PREFIX = "myapp/";
+		Configurator conf = ConfigManager.configure(INSTANCE);
+		ConfigManager.setFromEnv(conf, APP_PREFIX);
+		String[] unknownArgs = ConfigManager.setFromArgs(conf, args);
+		ConfigManager.printHelpFor(conf, APP_PREFIX, System.err);
 		if (INSTANCE.debug) {
-			System.out.println("Debug was set");
+			System.err.println("Debug was set");
 		}
-		String[] unknownArgs = conf.unknownArgs();
 		if (unknownArgs.length > 0) {
-			System.out.println("Unknown arguments:");
+			System.err.println("Unknown arguments:");
 			for (String a : unknownArgs) {
-				System.out.println("* " + a);
+				System.err.println("* " + a);
 			}
 		}
 	}

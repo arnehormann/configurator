@@ -1,22 +1,23 @@
 package org.jatronizer.configurator;
 
 /**
- * A Converter converts between String and the specified type.
- * It must throw an Exception if a conversion is not possible (e.g. out of range: "256" to Byte).
+ * A Converter converts between {@code String} and the specified type.
+ * It must throw an Exception if a conversion is not possible (e.g. out of range: "256" to {@code Byte}).
  * Each Converter uses its own format and must support conversions in both directions,
- * so unless {@code value == null}, this must be true:
- * {@code value.equals(converter.toString(converter.valueOf(value)))}
- * Implementations must provide a public constructor without arguments.
+ * so unless {@code value == null}, for each Converter c
+ * {@code value.equals(c.toString(c.fromString(value)))} must be true.
+ * Implementations of {@code Converter} must provide a default constructor (public, no arguments).
+ * @param <P> The type converted to or from String
  */
-public interface Converter<T> {
+public interface Converter<P> {
 
 	/**
-	 * create T from value.
+	 * Converts a String to P.
 	 */
-	T valueOf(String value);
+	P fromString(String value);
 
 	/**
-	 * convert a value into its {@code String} form.
+	 * Converts a P to String.
 	 */
-	String toString(T value);
+	String toString(P value);
 }

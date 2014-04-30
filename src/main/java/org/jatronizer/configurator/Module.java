@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Provides finer grained control for configuration elements.
+ * Marks a class grouping multiple configure parameters.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -19,8 +19,8 @@ public @interface Module {
 	String name() default "";
 
 	/**
-	 * Returns the prefix used for all {@code Parameter} keys this class contains.
-	 * To make modules distinguishable, the prefix should end in a separator (e.g. {@code /}).
+	 * Returns the keyPrefix used for all configure parameters this class contains.
+	 * To make modules distinguishable, the keyPrefix should end in a separator (e.g. "{@code /}").
 	 */
-	String prefix() default "";
+	String keyPrefix() default "";
 }

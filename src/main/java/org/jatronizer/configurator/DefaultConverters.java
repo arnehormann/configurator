@@ -1,5 +1,7 @@
 package org.jatronizer.configurator;
 
+import java.lang.reflect.Method;
+
 public final class DefaultConverters {
 
 	/**
@@ -50,7 +52,7 @@ public final class DefaultConverters {
 	 * Converts between the Strings "true" or "false" and their representations as Boolean
 	 */
 	public static final Converter<Boolean> BOOLEAN_CONVERTER = new Converter<Boolean>() {
-		public Boolean valueOf(String value) {return Boolean.valueOf(value);}
+		public Boolean fromString(String value) {return Boolean.valueOf(value);}
 		public String toString(Boolean value) {return Boolean.toString(value);}
 		public String toString() {return "BooleanConverter";}
 	};
@@ -59,7 +61,7 @@ public final class DefaultConverters {
 	 * Converts between one-char Strings and Character
 	 */
 	public static final Converter<Character> CHAR_CONVERTER = new Converter<Character>() {
-		public Character valueOf(String value) {
+		public Character fromString(String value) {
 			if (value.length() != 1) {
 				throw new RuntimeException("must be a single character");
 			}
@@ -73,7 +75,7 @@ public final class DefaultConverters {
 	 * Converts between a numeric String in decimal notation and Byte
 	 */
 	public static final Converter<Byte> BYTE_CONVERTER = new Converter<Byte>() {
-		public Byte valueOf(String value) {return Byte.valueOf(value);}
+		public Byte fromString(String value) {return Byte.valueOf(value);}
 		public String toString(Byte value) {return Byte.toString(value);}
 		public String toString() {return "ByteConverter";}
 	};
@@ -82,7 +84,7 @@ public final class DefaultConverters {
 	 * Converts between a numeric String in decimal notation and Short
 	 */
 	public static final Converter<Short> SHORT_CONVERTER = new Converter<Short>() {
-		public Short valueOf(String value) {return Short.valueOf(value);}
+		public Short fromString(String value) {return Short.valueOf(value);}
 		public String toString(Short value) {return Short.toString(value);}
 		public String toString() {return "ShortConverter";}
 	};
@@ -91,7 +93,7 @@ public final class DefaultConverters {
 	 * Converts between a numeric String in decimal notation and Integer
 	 */
 	public static final Converter<Integer> INT_CONVERTER = new Converter<Integer>() {
-		public Integer valueOf(String value) {return Integer.valueOf(value);}
+		public Integer fromString(String value) {return Integer.valueOf(value);}
 		public String toString(Integer value) {return Integer.toString(value);}
 		public String toString() {return "IntConverter";}
 	};
@@ -100,29 +102,29 @@ public final class DefaultConverters {
 	 * Converts between a numeric String in decimal notation and Long
 	 */
 	public static final Converter<Long> LONG_CONVERTER = new Converter<Long>() {
-		public Long valueOf(String value) {return Long.valueOf(value);}
+		public Long fromString(String value) {return Long.valueOf(value);}
 		public String toString(Long value) {return Long.toString(value);}
 		public String toString() {return "LongConverter";}
 	};
 
 	/**
 	 * Converts between a numeric String and Float.
-	 * The conversion uses {@code Float.valueOf} and {@code Float.toString}, the valid format
+	 * The conversion uses {@code Float.fromString} and {@code Float.toString}, the valid format
 	 * is described there.
 	 */
 	public static final Converter<Float> FLOAT_CONVERTER = new Converter<Float>() {
-		public Float valueOf(String value) {return Float.valueOf(value);}
+		public Float fromString(String value) {return Float.valueOf(value);}
 		public String toString(Float value) {return Float.toString(value);}
 		public String toString() {return "FloatConverter";}
 	};
 
 	/**
 	 * Converts between a numeric String and Double.
-	 * The conversion uses {@code Double.valueOf} and {@code Double.toString}, the valid format
+	 * The conversion uses {@code Double.fromString} and {@code Double.toString}, the valid format
 	 * is described there.
 	 */
 	public static final Converter<Double> DOUBLE_CONVERTER = new Converter<Double>() {
-		public Double valueOf(String value) {return Double.valueOf(value);}
+		public Double fromString(String value) {return Double.valueOf(value);}
 		public String toString(Double value) {return Double.toString(value);}
 		public String toString() {return "DoubleConverter";}
 	};
@@ -131,7 +133,7 @@ public final class DefaultConverters {
 	 * Returns the String as is.
 	 */
 	public static final Converter<String> STRING_CONVERTER = new Converter<String>() {
-		public String valueOf(String value) {return value;}
+		public String fromString(String value) {return value;}
 		public String toString(String value) {return value;}
 		public String toString() {return "StringConverter";}
 	};
@@ -141,4 +143,91 @@ public final class DefaultConverters {
 	 */
 	public static final Converter<Object> NULL_CONVERTER = new NullConverter();
 
+	/**
+	 * A {@code NullConverter} converts anything to {@code null}.
+	 */
+	public static class NullConverter implements Converter<Object> {
+		public Object fromString(String value) {return null;}
+		public String toString(Object value) {return null;}
+		public String toString() {return "NullConverter";}
+	}
+
+	/**
+	 * Converts between the names of enum values and their values.
+	 * @param <P> enum type.
+	 */
+	public static class EnumConverter<P> implements Converter<P> {
+
+		/**
+		 * Creates a converter for the specified enum type.
+		 * If the enum values are not accessible, {@code create} will call
+		 * {@link java.lang.reflect.Field#setAccessible(boolean);}.
+		 * Throws a {@link ConfigurationException} if {@code c} is not an enum, the enum values of {@code c} could
+		 * not be accessed and it could not be made accessible.
+		 * @param c Type of the enum.
+		 */
+		public static <P> EnumConverter<P> create(Class<P> c) {
+			if (!c.isEnum()) {
+				throw new ConfigurationException("Class " + c.getCanonicalName() + " is not an enum");
+			}
+			Method valueOf = null;
+			Method name = null;
+			try {
+				valueOf = c.getMethod("valueOf", String.class);
+				name = c.getMethod("name");
+				if (!valueOf.isAccessible()) {
+					// NOTE making fromString and name accessible is not reverted later.
+					valueOf.setAccessible(true);
+					name.setAccessible(true);
+				}
+			} catch (Exception e) {
+				// famous last words: never going to happen
+				throw new ConfigurationException("Method name and/or fromString could not be accessed", e);
+			}
+			return new EnumConverter<P>("EnumConverter(" + c.getCanonicalName() +")", valueOf, name);
+		}
+
+		private final String string;
+		private final Method valueOf;
+		private final Method name;
+
+		private EnumConverter(String string, Method valueOf, Method name) {
+			this.string = string;
+			this.valueOf = valueOf;
+			this.name = name;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public P fromString(String value) {
+			try {
+				return (P) valueOf.invoke(null, value);
+			} catch (Exception e) {
+				throw new IllegalValueException("Could not convert from String with " + valueOf.toString(), e);
+			}
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public String toString(P value) {
+			try {
+				return (String) name.invoke(value);
+			} catch (Exception e) {
+				throw new IllegalValueException("Could not convert to String with " + name.toString(), e);
+			}
+		}
+
+		public String toString() {return string;}
+
+		public boolean equals(Object o) {
+			return this == o ||
+					o.getClass() == EnumConverter.class && (valueOf.equals(((EnumConverter) o).valueOf));
+		}
+
+		public int hashCode() {
+			return valueOf.hashCode() ^ ~name.hashCode();
+		}
+	}
 }
