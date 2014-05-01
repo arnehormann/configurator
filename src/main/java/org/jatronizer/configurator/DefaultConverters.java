@@ -55,10 +55,10 @@ public final class DefaultConverters {
 	public static final Converter<Boolean> BOOLEAN_CONVERTER = new Converter<Boolean>() {
 		public Boolean fromString(String value) {
 			if ("false".equals(value)) {
-				return Boolean.FALSE;
+				return false;
 			}
 			if ("true".equals(value)) {
-				return Boolean.TRUE;
+				return true;
 			}
 			throw new IllegalValueException("\"" + value + "\" is not a boolean");
 		}
