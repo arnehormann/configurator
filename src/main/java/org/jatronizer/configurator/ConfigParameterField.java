@@ -40,8 +40,8 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 			key = field.getName();
 		}
 		Converter<P> converter;
-		if (converterClass == null || converterClass == DefaultConverters.NullConverter.class) {
-			converter = DefaultConverters.getFor((Class<P>) field.getType());
+		if (converterClass == null || converterClass == Converters.NullConverter.class) {
+			converter = Converters.getFor((Class<P>) field.getType());
 		} else {
 			try {
 				converter = (Converter<P>) converterClass.newInstance();

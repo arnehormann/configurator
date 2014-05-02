@@ -112,6 +112,17 @@ public final class ConfigManager {
 	}
 
 	/**
+	 * Returns the default converter for all primitive data types, their respective wrappers,
+	 * String and enum types.
+	 * {@code getFor} does not handle arrays.
+	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
+	 * If no fitting converter exists, it returns {@code null}.
+	 */
+	public static <T> Converter<T> converter(Class<T> type) {
+		return Converters.getFor(type);
+	}
+
+	/**
 	 * Creates a {@code ConfigParameter} using the specified details.
 	 * This function can be used as an alternative for external fields not annotated with {@link Parameter}
 	 * or if the code in question should not have external dependencies.
@@ -247,7 +258,7 @@ public final class ConfigManager {
 	 * @param args All arguments that should be parsed for keys.
 	 * @return The number of pairs that were or would have been stored in {@code dst}.
 	 */
-	public static int getArgs(Map<String, String> dst, Collection<String> dstUnused, String[] keys, String...args) {
+	public static int getArgs(Map<String, String> dst, Collection<String> dstUnused, String[] keys, String[] args) {
 		String[] collisions = ConfigSupport.collisions(arg, keys);
 		if (collisions.length > 0) {
 			throw new ConfigurationException("collisions for command line argument keys: " +
@@ -279,7 +290,7 @@ public final class ConfigManager {
 
 	/**
 	 * Sets configuration options from command line arguments and returns the arguments that could not be
-	 * recognized. See {@link #getArgs(java.util.Map, java.util.Collection, String[], String...)} for details.
+	 * recognized. See {@link #getArgs(java.util.Map, java.util.Collection, String[], String[])} for details.
 	 * @param configurator The configurator managing the configuration options.
 	 * @param args The command line arguments.
 	 * @return Unrecognized arguments.

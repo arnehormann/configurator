@@ -81,7 +81,7 @@ final class ConfigSupport {
 		return d.value();
 	}
 
-	public static String[] collisions(KeyFormatter format, String...keys) {
+	public static String[] collisions(KeyFormatter format, String[] keys) {
 		HashMap<String, String> map = new HashMap<String, String>(keys.length, 1.0f);
 		ArrayList<String> collisions = new ArrayList<String>();
 		for (String key : keys) {
@@ -124,7 +124,7 @@ final class ConfigSupport {
 	public static int parseValues(
 			Map<String, String> dst, Collection<String> dstUnused,
 			String[] keys, String keyPrefix, KeyFormatter format,
-			String... src) {
+			String[] src) {
 		if (keyPrefix == null) {
 			keyPrefix = "";
 		}

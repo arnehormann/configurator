@@ -22,5 +22,5 @@ public @interface Parameter {
 	 * Returns a class used to convert between the parameter type and its {@code String} representation.
 	 * The class must have a public constructor taking no arguments.
 	 */
-	Class<? extends Converter> convert() default DefaultConverters.NullConverter.class;
+	Class<? extends Converter> convert() default Converters.NullConverter.class;
 }

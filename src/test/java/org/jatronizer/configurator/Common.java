@@ -1,74 +1,20 @@
 package org.jatronizer.configurator;
 
-import org.junit.Assert;
-
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 import static org.junit.Assert.fail;
 
-public class Common {
+public final class Common {
 	public static interface Action {
 		void run(Object[] args);
 	}
 
-	public static final Action HAS_IDENTICAL_ELEMENTS = new Action() {
-		public void run(Object[] args) {
-			if (args.length < 2) {
-				throw new RuntimeException("at least two arguments required, got " + Arrays.toString(args));
-			}
-			Object reference = args[0];
-			for (int i = 1; i < args.length; i++) {
-				Assert.assertSame(reference, args[i]);
-			}
-		}
-	};
-
-	public static final Action HAS_EQUAL_ELEMENTS = new Action() {
-		public void run(Object[] args) {
-			if (args.length < 2) {
-				throw new RuntimeException("at least two arguments required, got " + Arrays.toString(args));
-			}
-			Object reference = args[0];
-			for (int i = 1; i < args.length; i++) {
-				Assert.assertEquals(reference, args[i]);
-			}
-		}
-	};
-
-	public static void eachRow(Object[][] scenarios, Action... actions) {
-		for (Object[] scenario : scenarios) {
-			for (Action action : actions) {
-				action.run(scenario);
-			}
-		}
-	}
-
-	public static <T> T[] Range(int offset, int width, T...data) {
-		return Arrays.copyOfRange(data, offset, offset + width);
-	}
-
-	public static Action FAIL_ON_CALLS = new Action() {
-		public void run(Object[] args) {
-			Call call = (Call) args[0];
-			Object[] callArgs = new Object[args.length - 1];
-			System.arraycopy(args, 1, callArgs, 0, callArgs.length);
-			try {
-				Object o = call.with(callArgs);
-				fail("Expected an Exception on calling " + call + " with " + Arrays.toString(callArgs));
-			} catch (Exception e) {
-			}
-		}
-	};
-
 	public static interface Call {
 		Call on(Object base);
 		Object with(Object...args);
-	}
-
-	public static Call call(Object base, String name, Class...argTypes) {
-		return new ACall(base, name, argTypes);
 	}
 
 	private static class ACall implements Call {
@@ -104,6 +50,10 @@ public class Common {
 		}
 
 		public Object with(Object... args) {
+			if (args == null) {
+				// with varargs, this happens when null is the only argument
+				args = new Object[]{null};
+			}
 			try {
 				this.method.invoke(base, args);
 				return this;
@@ -115,5 +65,52 @@ public class Common {
 		public String toString() {
 			return method.toString();
 		}
+	}
+
+	public static Action FAIL_ON_CALLS = new Action() {
+		public void run(Object[] args) {
+			Call call = (Call) args[0];
+			Object[] callArgs = new Object[args.length - 1];
+			System.arraycopy(args, 1, callArgs, 0, callArgs.length);
+			try {
+				Object o = call.with(callArgs);
+				fail("Expected an Exception on calling " + call + " with " + Arrays.toString(callArgs));
+			} catch (Exception e) {
+			}
+		}
+	};
+
+	public static void each(Object[][] scenarios, Action... actions) {
+		for (Object[] scenario : scenarios) {
+			for (Action action : actions) {
+				action.run(scenario);
+			}
+		}
+	}
+
+	public static Call call(Object base, String name, Class...argTypes) {
+		return new ACall(base, name, argTypes);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T getConstant(Class type, Class<T> valueType, String name) {
+		Field field;
+		Object value;
+		try {
+			field = type.getDeclaredField(name);
+			value = field.get(null);
+		} catch (RuntimeException re) {
+			throw re;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		final int staticFinal = Modifier.FINAL | Modifier.STATIC;
+		if ((field.getModifiers() & staticFinal) != staticFinal) {
+			throw new RuntimeException(field + " is not static final");
+		}
+		if (valueType != null && value.getClass() != valueType) {
+			throw new RuntimeException(name + " is not a " + valueType.getSimpleName());
+		}
+		return (T) value;
 	}
 }

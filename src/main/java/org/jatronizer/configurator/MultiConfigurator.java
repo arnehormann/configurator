@@ -16,7 +16,7 @@ final class MultiConfigurator implements Configurator {
 		}
 	}
 
-	public static MultiConfigurator configure(Configurator... configurators) {
+	public static MultiConfigurator configure(Configurator[] configurators) {
 		configurators = configurators.clone();
 		// configure sorted array of available keys
 		ArrayList<Key> keyList = new ArrayList<Key>();

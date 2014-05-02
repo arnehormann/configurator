@@ -2,7 +2,7 @@ package org.jatronizer.configurator;
 
 import java.lang.reflect.Method;
 
-public final class DefaultConverters {
+final class Converters {
 
 	/**
 	 * Returns the default converter for all primitive data types, their respective wrappers,
@@ -139,7 +139,7 @@ public final class DefaultConverters {
 	};
 
 	/**
-	 * Returns the String as is.
+	 * Returns the String as is (even if it's {@code null}).
 	 */
 	public static final Converter<String> STRING_CONVERTER = new Converter<String>() {
 		public String fromString(String value) {return value;}
@@ -148,7 +148,7 @@ public final class DefaultConverters {
 	};
 
 	/**
-	 * Converts anything to null.
+	 * Converts anything to {@code null}.
 	 */
 	public static final Converter<Object> NULL_CONVERTER = new NullConverter();
 
