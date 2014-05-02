@@ -15,7 +15,6 @@ public class ConvertersTest {
 		B
 	}
 
-
 	public static <T> ConversionCheck<T> checkWith(Converter<T> conv) {
 		return new ConversionCheck<T>(conv);
 	}
@@ -111,17 +110,17 @@ public class ConvertersTest {
 			for (int i = 1; i < entries.length; i++) {
 				Class type = (Class) entries[i];
 				String name = type == null ? "null" : type.getSimpleName();
-				assertTrue("converter constant is returned for " + name, c == getFor(type));
+				assertTrue("converter constant is returned for " + name, c == converterFor(type));
 			}
 		}
-		assertTrue("getFor handles enums",
-				getFor(TestValues.class).getClass() == Converters.EnumConverter.class);
+		assertTrue("converterFor handles enums",
+				converterFor(TestValues.class).getClass() == Converters.EnumConverter.class);
 	}
 
 	@Test
 	public void testBoolean() {
 		Class type = Boolean.class;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				true,
 				false
@@ -139,7 +138,7 @@ public class ConvertersTest {
 	@Test
 	public void testChar() {
 		Class type = Character.class;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				Character.MIN_VALUE,
 				' ',
@@ -162,7 +161,7 @@ public class ConvertersTest {
 		Class type = Byte.class;
 		Byte min = Byte.MIN_VALUE;
 		Byte max = Byte.MAX_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				min,
 				(byte) -1,
@@ -186,7 +185,7 @@ public class ConvertersTest {
 		Class type = Short.class;
 		Short min = Short.MIN_VALUE;
 		Short max = Short.MAX_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				min,
 				(short) -1,
@@ -210,7 +209,7 @@ public class ConvertersTest {
 		Class type = Integer.class;
 		Integer min = Integer.MIN_VALUE;
 		Integer max = Integer.MAX_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				min,
 				-1,
@@ -234,12 +233,12 @@ public class ConvertersTest {
 		Class type = Long.class;
 		Long min = Long.MIN_VALUE;
 		Long max = Long.MAX_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				min,
-				(long) -1,
-				(long) 0,
-				(long) 1,
+				-1L,
+				0L,
+				1L,
 				max
 		), checkWith(conv));
 		final String minstr = min.toString();
@@ -260,7 +259,7 @@ public class ConvertersTest {
 		final Float max = Float.MAX_VALUE;
 		final Float norm = Float.MIN_NORMAL;
 		final Float min = Float.MIN_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				-inf,
 				-max,
@@ -290,7 +289,7 @@ public class ConvertersTest {
 		final Double max = Double.MAX_VALUE;
 		final Double norm = Double.MIN_NORMAL;
 		final Double min = Double.MIN_VALUE;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				-inf,
 				-max,
@@ -316,9 +315,9 @@ public class ConvertersTest {
 	@Test
 	public void testString() {
 		Class type = String.class;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
-				(String) null,
+				null,
 				"",
 				" ",
 				"a",
@@ -329,7 +328,7 @@ public class ConvertersTest {
 
 	@Test
 	public void testNull() {
-		Converter conv = getFor(null);
+		Converter conv = converterFor(null);
 		each(new Object[][]{
 				{null, null},
 				{null, ""},
@@ -341,7 +340,7 @@ public class ConvertersTest {
 	@Test
 	public void testEnum() {
 		Class type = TestValues.class;
-		Converter conv = getFor(type);
+		Converter conv = converterFor(type);
 		each(ofValues(type,
 				TestValues.a,
 				TestValues.b,

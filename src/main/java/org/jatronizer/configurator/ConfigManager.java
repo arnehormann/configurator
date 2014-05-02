@@ -114,12 +114,12 @@ public final class ConfigManager {
 	/**
 	 * Returns the default converter for all primitive data types, their respective wrappers,
 	 * String and enum types.
-	 * {@code getFor} does not handle arrays.
+	 * {@code converterFor} does not handle arrays.
 	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
 	 * If no fitting converter exists, it returns {@code null}.
 	 */
 	public static <T> Converter<T> converter(Class<T> type) {
-		return Converters.getFor(type);
+		return Converters.converterFor(type);
 	}
 
 	/**

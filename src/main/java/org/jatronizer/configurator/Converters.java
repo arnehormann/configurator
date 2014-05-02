@@ -7,12 +7,12 @@ final class Converters {
 	/**
 	 * Returns the default converter for all primitive data types, their respective wrappers,
 	 * String and enum types.
-	 * {@code getFor} does not handle arrays.
+	 * {@code converterFor} does not handle arrays.
 	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
 	 * If no fitting converter exists, it returns {@code null}.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Converter<T> getFor(Class<T> c) {
+	public static <T> Converter<T> converterFor(Class<T> c) {
 		if (c == null || c == Void.class) {
 			return (Converter<T>) NULL_CONVERTER;
 		}
