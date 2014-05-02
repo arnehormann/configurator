@@ -6,7 +6,7 @@
 
 	<groupId>org.jatronizer</groupId>
 	<artifactId>configurator</artifactId>
-	<version>1.0.0</version>
+	<version>0.0.0</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -45,9 +45,6 @@
 				<version>2.16</version>
 				<configuration>
 					<failIfNoTests>true</failIfNoTests>
-					<includes>
-						<!--<include>**/.java</include>-->
-					</includes>
 				</configuration>
 			</plugin>
 		</plugins>
