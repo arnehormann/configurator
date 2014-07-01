@@ -1,5 +1,5 @@
 apply plugin: 'java'
-apply plugin: 'findbugs'
+// apply plugin: 'findbugs' // TODO enable when 3.0.0 is released
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 
@@ -14,12 +14,14 @@ dependencies {
 
 test { exclude '**/example/**' }
 
+/*
 findbugs {
-	toolVersion = "2.0.3"
+	toolVersion = "3.0.0"
 	effort = "max"
 	reportLevel = "high"
 	reportsDir = file("$project.buildDir/findbugsReports")
 }
+*/
 
 jar {
 	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
