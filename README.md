@@ -48,7 +48,8 @@ Fill the configuration values from
   * database entries
   * web api calls
   * ...
-Everything is supported, command line argument and environment variable support is already built in.
+
+All these scenarios are possible, support for command line arguments and environment variables is built in.
 
 ## Example 1 - multiple modules
 Here's an example using the same module in one configuration:
