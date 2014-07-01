@@ -9,12 +9,12 @@ package org.jatronizer.configurator;
  * A {@code ConfigurationVisitor} can be used to e.g. dynamically create help texts including
  * the currently set values.
  */
-public interface ConfigurationVisitor {
+public interface ConfigVisitor {
 
 	/**
 	 * Is called per configuration module.
 	 */
-	void visitModule(String name, String description, Configurator configurator);
+	void visitModule(String name, String tag, String description, Configurator configurator);
 
 	/**
 	 * Is called per configuration parameter.

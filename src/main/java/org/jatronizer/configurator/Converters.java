@@ -173,13 +173,13 @@ final class Converters {
 		 * Creates a converter for the specified enum type.
 		 * If the enum values are not accessible, {@code create} will call
 		 * {@link java.lang.reflect.Field#setAccessible(boolean);}.
-		 * Throws a {@link ConfigurationException} if {@code c} is not an enum, the enum values of {@code c} could
+		 * Throws a {@link ConfigException} if {@code c} is not an enum, the enum values of {@code c} could
 		 * not be accessed and it could not be made accessible.
 		 * @param c Type of the enum.
 		 */
 		public static <P> EnumConverter<P> create(Class<P> c) {
 			if (!c.isEnum()) {
-				throw new ConfigurationException("Class " + c.getCanonicalName() + " is not an enum");
+				throw new ConfigException("Class " + c.getCanonicalName() + " is not an enum");
 			}
 			Method valueOf = null;
 			Method name = null;
@@ -193,7 +193,7 @@ final class Converters {
 				}
 			} catch (Exception e) {
 				// famous last words: never going to happen
-				throw new ConfigurationException("Method name and/or fromString could not be accessed", e);
+				throw new ConfigException("Method name and/or fromString could not be accessed", e);
 			}
 			return new EnumConverter<P>("EnumConverter(" + c.getCanonicalName() +")", valueOf, name);
 		}

@@ -39,7 +39,7 @@ final class MultiConfigurator implements Configurator {
 		for (int i = 0; i < keys.length; i++) {
 			Key k = keys[i];
 			if (k.key.equals(lastKey)) {
-				throw new ConfigurationException("duplicate key " + k.key + " in keys");
+				throw new ConfigException("duplicate key " + k.key + " in keys");
 			}
 			lastKey = k.key;
 			keyToConfigurator[i] = k.configurator;
@@ -143,7 +143,7 @@ final class MultiConfigurator implements Configurator {
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings("unsafe")
-	public void walk(ConfigurationVisitor v) {
+	public void walk(ConfigVisitor v) {
 		for (Configurator conf : configurators) {
 			conf.walk(v);
 		}

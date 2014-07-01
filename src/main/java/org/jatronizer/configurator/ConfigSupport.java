@@ -29,11 +29,11 @@ final class ConfigSupport {
 				if ("".equals(key)) {
 					key = f.getName();
 				}
-				conf.add(ConfigParameterField.create(configuration, f, keyPrefix + key, p.convert()));
+				conf.add(ConfigParameterField.create(configuration, f, keyPrefix + key, p.tag(), p.converter()));
 			}
 		}
 		if (conf.isEmpty()) {
-			throw new ConfigurationException(
+			throw new ConfigException(
 					"configure " +
 					cc +
 					" has no fields annotated with " +

@@ -23,6 +23,11 @@ public interface ConfigParameter<C,P> extends Converter<P> {
 	String description();
 
 	/**
+	 * Retrieves the tags of this configuration parameter.
+	 */
+	String tag();
+
+	/**
 	 * Retrieves the type of the configuration parameter.
 	 */
 	Class<P> type();

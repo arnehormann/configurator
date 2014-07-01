@@ -18,6 +18,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	public final String key;
 	public final String defaultValue;
 	public final String description;
+	private final String tag;
 	private final Converter<P> converter;
 	private final Field field;
 	private final String[] enumNames;
@@ -25,19 +26,23 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 
 	@SuppressWarnings("unchecked")
 	public static <C,P> ConfigParameterField<C,P> create(
-			C configuration, Field field, String key,
+			C configuration, Field field,
+			String key, String tag,
 			Class<P> converterClass) {
 		if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) != 0) {
 			// static fields can not be set on instances
 			// final could have been optimized and may not have an effect
-			throw new ConfigurationException(field.toString() + " must not be static or final");
+			throw new ConfigException(field.toString() + " must not be static or final");
 		}
 		if (configuration.getClass() != field.getDeclaringClass()) {
-			throw new ConfigurationException(field.toString() + " is not declared on " + configuration.getClass());
+			throw new ConfigException(field.toString() + " is not declared on " + configuration.getClass());
 		}
 		String description = ConfigSupport.description(field);
 		if (key == null || "".equals(key)) {
 			key = field.getName();
+		}
+		if (tag == null) {
+			tag = "";
 		}
 		Converter<P> converter;
 		if (converterClass == null || converterClass == Converters.NullConverter.class) {
@@ -46,7 +51,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 			try {
 				converter = (Converter<P>) converterClass.newInstance();
 			} catch (Exception e) {
-				throw new ConfigurationException(e);
+				throw new ConfigException(e);
 			}
 		}
 		String[] enumValues = new String[0];
@@ -79,7 +84,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 					enumValues[j] = enumFields[j].getName();
 				}
 			} catch (Exception e) {
-				throw new ConfigurationException("Could not access enum values of " + c, e);
+				throw new ConfigException("Could not access enum values of " + c, e);
 			}
 		}
 		String defaultValue;
@@ -92,7 +97,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 				}
 				value = (P) field.get(configuration);
 			} catch (Exception e) {
-				throw new ConfigurationException(field.toString() + " could not be accessed", e);
+				throw new ConfigException(field.toString() + " could not be accessed", e);
 			}
 			defaultValue = converter.toString(value);
 		}
@@ -100,6 +105,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 				key,
 				field,
 				defaultValue,
+				tag,
 				description,
 				converter,
 				enumValues,
@@ -108,11 +114,12 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	}
 
 	private ConfigParameterField(
-			String key, Field field, String defaultValue,
+			String key, Field field, String defaultValue, String tag,
 			String description, Converter<P> converter,
 			String[] enumNames, Field[] enumFields) {
 		this.key = key;
 		this.defaultValue = defaultValue;
+		this.tag = tag;
 		this.description = description;
 		this.field = field;
 		this.converter = converter;
@@ -132,6 +139,13 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	 */
 	public String defaultValue() {
 		return defaultValue;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public String tag() {
+		return tag;
 	}
 
 	/**

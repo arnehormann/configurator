@@ -17,9 +17,9 @@ public final class ConfigManager {
 
 	/**
 	 * HelpPrinter provides a default format to display a help text on the command line.
-	 * An instance can be passed to {@link MultiConfigurator#walk(ConfigurationVisitor)}.
+	 * An instance can be passed to {@link MultiConfigurator#walk(ConfigVisitor)}.
 	 */
-	private static class HelpPrinter implements ConfigurationVisitor {
+	private static class HelpPrinter implements ConfigVisitor {
 
 		private final OutputStream out;
 		private final String envVarPrefix;
@@ -46,11 +46,11 @@ public final class ConfigManager {
 			try {
 				out.write(text.getBytes());
 			} catch (IOException e) {
-				throw new ConfigurationException(e);
+				throw new ConfigException(e);
 			}
 		}
 
-		public void visitModule(String name, String description, Configurator configurator) {
+		public void visitModule(String name, String tag, String description, Configurator configurator) {
 			if ("".equals(name)) {
 				return;
 			}
@@ -132,20 +132,21 @@ public final class ConfigManager {
 	 * @param configuration An instance with the parameter field, must not be {@code null}.
 	 * @param field The parameter field, must not be {@code null}.
 	 * @param key The key representing this parameter; name of the field if {@code null}.
+	 * @param tag An optional tag or a space separated list of tags.
 	 * @param converterClass The converter between String and the field type, {@code null} for the default.
 	 * @param <C> Type of the configuration.
 	 * @param <P> Type of the configuration parameter.
 	 * @return The configuration parameter specified by the arguments.
 	 */
 	public static <C,P> ConfigParameter<C,P> parameter(
-			C configuration, Field field, String key, Class<P> converterClass) {
+			C configuration, Field field, String key, String tag, Class<P> converterClass) {
 		if (configuration == null) {
 			throw new NullPointerException("configuration is null");
 		}
 		if (field == null) {
 			throw new NullPointerException("field is null");
 		}
-		return ConfigParameterField.create(configuration, field, key, converterClass);
+		return ConfigParameterField.create(configuration, field, key, tag, converterClass);
 	}
 
 	/**
@@ -165,7 +166,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Creates a module from a configuration and does not require any annotations.
+	 * Creates a module from a configuration without using the annotations.
 	 * In most cases, this will be used if the same module should be used twice but with different
 	 * key prefixes and another usage.
 	 * For example, it enables using smtp module configuration for warn and error logs and for a customer facing
@@ -183,14 +184,14 @@ public final class ConfigManager {
 	 * @return Configurator for the module.
 	 */
 	public static <C> Configurator module(
-			C configuration, String name, String keyPrefix, String description, ConfigParameter... params) {
+			C configuration, String name, String keyPrefix, String tag, String description, ConfigParameter... params) {
 		if (configuration == null) {
 			throw new NullPointerException("configuration is null");
 		}
 		if (params.length == 0) {
 			params = parameters(configuration, keyPrefix);
 		}
-		return InstanceConfigurator.control(configuration, name, keyPrefix, description, params);
+		return InstanceConfigurator.control(configuration, name, keyPrefix, tag, description, params);
 	}
 
 	/**
@@ -199,14 +200,14 @@ public final class ConfigManager {
 	 * This is also the preferred way to create a {@code Configurator} for a single module that uses
 	 * {@link Parameter} and optionally also {@code Module} and {@code Description} annotations.
 	 * @param configurations The configuration instances.
-	 * @param <C> A common type for all configurations.
-	 *              This is only used for consistency here so {@code C} denotes a configuration type.
+	 * @param <C> Type of the configuration.
 	 * @return Common Configurator for the configurations.
 	 */
 	@SuppressWarnings("unchecked")
 	public static <C> Configurator configure(C... configurations) {
+		// <C> could also be Object here. It is used for documentation and consistency.
 		if (configurations.length == 0) {
-			throw new ConfigurationException("configurations are empty");
+			throw new ConfigException("configurations are empty");
 		}
 		// create all configurators
 		Configurator[] configurators = new Configurator[configurations.length];
@@ -224,7 +225,7 @@ public final class ConfigManager {
 	@SuppressWarnings("unchecked")
 	public static Configurator manage(Configurator... configurators) {
 		if (configurators.length == 0) {
-			throw new ConfigurationException("configurators are empty");
+			throw new ConfigException("configurators are empty");
 		}
 		if (configurators.length == 1) {
 			return configurators[0];
@@ -262,7 +263,7 @@ public final class ConfigManager {
 	public static int getArgs(Map<String, String> dst, Collection<String> dstUnused, String[] keys, String[] args) {
 		String[] collisions = ConfigSupport.collisions(arg, keys);
 		if (collisions.length > 0) {
-			throw new ConfigurationException("collisions for command line argument keys: " +
+			throw new ConfigException("collisions for command line argument keys: " +
 					Arrays.toString(collisions)
 			);
 		}
@@ -282,7 +283,7 @@ public final class ConfigManager {
 	public static int getEnv(Map<String, String> dst, String[] keys, String envVarPrefix) {
 		String[] collisions = ConfigSupport.collisions(env, keys);
 		if (collisions.length > 0) {
-			throw new ConfigurationException("collisions for environment keys: " +
+			throw new ConfigException("collisions for environment keys: " +
 					Arrays.toString(collisions)
 			);
 		}

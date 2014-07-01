@@ -19,6 +19,13 @@ public @interface Module {
 	String name() default "";
 
 	/**
+	 * Returns an optional tag for this module.
+	 * A tag should not contain spaces. Spaces should be used to separate multiple tags.
+	 * Tags can be used to group modules, e.g. to hide some modules in introductory documentation.
+	 */
+	String tag() default "";
+
+	/**
 	 * Returns the key prefix used for all configure parameters this class contains.
 	 * To make modules distinguishable, {@code keyPrefix} should end in a separator (e.g. "{@code /}").
 	 */

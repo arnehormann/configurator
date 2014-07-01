@@ -55,5 +55,5 @@ public interface Configurator {
 	 * {@code walk} calls {@code visitModule} and {@code visitParameter} on {@code v}.
 	 * Use {@code walk} to e.g. create a dynamic help text with currently set values at runtime.
 	 */
-	void walk(ConfigurationVisitor v);
+	void walk(ConfigVisitor v);
 }

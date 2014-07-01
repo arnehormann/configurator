@@ -41,13 +41,15 @@ final class InstanceConfigurator<C> implements Configurator {
 		Module module = (Module) cc.getAnnotation(Module.class);
 		String name = "";
 		String keyPrefix = "";
+		String tag = "";
 		if (module != null) {
 			name = module.name();
 			keyPrefix = module.keyPrefix();
+			tag = module.tag();
 		}
 		ConfigParameter[] params = ConfigSupport.fetchParameters(configuration, keyPrefix);
 		return new InstanceConfigurator<C>(
-				configuration, params, name, ConfigSupport.description(cc)
+				configuration, params, name, tag, ConfigSupport.description(cc)
 		);
 	}
 
@@ -59,30 +61,33 @@ final class InstanceConfigurator<C> implements Configurator {
 	 *               when concurrent accesses are possible.
 	 * @param name ConfigManager module name.
 	 * @param keyPrefix Prefix to add to all keys contained in this module.
+	 * @param tag An optional tag or space separated list of tags for the module.
 	 * @param description Answer to the question "What is this module used for?".
 	 * @param params Managed configure parameters, must all represent fields on {@code configure}.
 	 */
 	public static <C> InstanceConfigurator<C> control(
-			C configuration, String name, String keyPrefix, String description, ConfigParameter<C,?>[] params) {
+			C configuration, String name, String keyPrefix, String tag, String description,
+			ConfigParameter<C,?>[] params) {
 		// to synchronize access on an instance, check that all params share the same declaring class
 		Class configType = configuration.getClass();
 		for (ConfigParameter param : params) {
 			if (param.outerType() != configType) {
-				throw new ConfigurationException("All configure parameters must belong to " + configType);
+				throw new ConfigException("All configure parameters must belong to " + configType);
 			}
 		}
-		return new InstanceConfigurator<C>(configuration, params, name, description);
+		return new InstanceConfigurator<C>(configuration, params, name, tag, description);
 	}
 
 	private final C config;
 	private final String[] keys;
 	private final ConfigParameter[] parameters;
 	private final String name;
+	private final String tag;
 	private final String description;
 
 	private InstanceConfigurator(
 			C config, ConfigParameter[] parameters,
-			String name, String desc) {
+			String name, String tag, String desc) {
 		this.config = config;
 		String[] keys = new String[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -90,6 +95,7 @@ final class InstanceConfigurator<C> implements Configurator {
 		}
 		this.parameters = parameters;
 		this.keys = keys;
+		this.tag = tag == null ? "" : tag;
 		this.description = desc == null ? "" : desc;
 		this.name = name == null || "".equals(name)
 				? config.getClass().getSimpleName()
@@ -185,8 +191,8 @@ final class InstanceConfigurator<C> implements Configurator {
 	 * {@inheritDoc}
 	 */
 	@SuppressWarnings("unchecked")
-	public void walk(ConfigurationVisitor v) {
-		v.visitModule(name, description, this);
+	public void walk(ConfigVisitor v) {
+		v.visitModule(name, tag, description, this);
 		for (ConfigParameter field : parameters) {
 			v.visitParameter(field, field.get(config));
 		}
