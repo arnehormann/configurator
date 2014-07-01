@@ -9,9 +9,10 @@ import java.util.*;
 
 public final class ConfigManager {
 
-	// Can not be instantiated
+	// Static class without instances, constructor is hidden
 	private ConfigManager() {}
 
+	// Command line arguments start with a dash
 	private static final String ARG_PREFIX = "-";
 
 	/**
@@ -112,11 +113,12 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Returns the default converter for all primitive data types, their respective wrappers,
-	 * String and enum types.
+	 * Returns the default converter for all primitive data types, their types in boxed form, String and enum types.
 	 * {@code converterFor} does not handle arrays.
-	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
-	 * If no fitting converter exists, it returns {@code null}.
+	 * If {@code c} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
+	 * @param type Class of the conversion type.
+	 * @param <T> The conversion type.
+	 * @return The fitting Converter or {@code null}.
 	 */
 	public static <T> Converter<T> converter(Class<T> type) {
 		return Converters.converterFor(type);
@@ -133,6 +135,7 @@ public final class ConfigManager {
 	 * @param converterClass The converter between String and the field type, {@code null} for the default.
 	 * @param <C> Type of the configuration.
 	 * @param <P> Type of the configuration parameter.
+	 * @return The configuration parameter specified by the arguments.
 	 */
 	public static <C,P> ConfigParameter<C,P> parameter(
 			C configuration, Field field, String key, Class<P> converterClass) {
@@ -151,6 +154,7 @@ public final class ConfigManager {
 	 * @param keyPrefix A prefix for all keys representing the parameters.
 	 * @param <C> Type of the configuration.
 	 * @param <P> Type of the configuration parameter.
+	 * @return The configuration parameters contained in the specified configuration.
 	 */
 	@SuppressWarnings("unchecked")
 	public static <C,P> ConfigParameter<C,P>[] parameters(C configuration, String keyPrefix) {
@@ -176,6 +180,7 @@ public final class ConfigManager {
 	 * @param params The configuration parameters, must all reference fields on {@code configuration}.
 	 *               If {@code params} is empty, the result of {@link #parameters(Object, String)} is used.
 	 * @param <C> Type of the configuration.
+	 * @return Configurator for the module.
 	 */
 	public static <C> Configurator module(
 			C configuration, String name, String keyPrefix, String description, ConfigParameter... params) {
@@ -196,17 +201,12 @@ public final class ConfigManager {
 	 * @param configurations The configuration instances.
 	 * @param <C> A common type for all configurations.
 	 *              This is only used for consistency here so {@code C} denotes a configuration type.
+	 * @return Common Configurator for the configurations.
 	 */
 	@SuppressWarnings("unchecked")
 	public static <C> Configurator configure(C... configurations) {
 		if (configurations.length == 0) {
 			throw new ConfigurationException("configurations are empty");
-		}
-		// C is erased to Object and configure could have been called when manage is meant.
-		// Force code corrections by feedback.
-		Class cc = configurations[0].getClass();
-		if (cc == InstanceConfigurator.class || cc == MultiConfigurator.class) {
-			throw new ConfigurationException("Wrong function, call manage instead of configure");
 		}
 		// create all configurators
 		Configurator[] configurators = new Configurator[configurations.length];
@@ -219,6 +219,7 @@ public final class ConfigManager {
 	/**
 	 * Creates a {@link Configurator} wrapping multiple other configurators.
 	 * @param configurators The configurators to be wrapped.
+	 * @return Common Configurator including the specified Configurators.
 	 */
 	@SuppressWarnings("unchecked")
 	public static Configurator manage(Configurator... configurators) {

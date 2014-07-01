@@ -9,8 +9,14 @@ final class ConfigSupport {
 	// Can not be instantiated
 	private ConfigSupport() {}
 
-	public static ConfigParameter[] fetchParameters(Object config, String keyPrefix) {
-		Class cc = config.getClass();
+	/**
+	 * Fetches all fields annotated with {@link Parameter} from {@code configuration}.
+	 * @param configuration An instance with {@code Parameter} annotated fields, must not be {@code null}.
+	 * @param keyPrefix A prefix for all keys representing the parameters.
+	 * @return The configuration parameters contained in the specified configuration.
+	 */
+	public static ConfigParameter[] fetchParameters(Object configuration, String keyPrefix) {
+		Class cc = configuration.getClass();
 		Field[] fields = cc.getDeclaredFields();
 		ArrayList<ConfigParameter> conf = new ArrayList<ConfigParameter>(fields.length);
 		if (keyPrefix == null) {
@@ -23,7 +29,7 @@ final class ConfigSupport {
 				if ("".equals(key)) {
 					key = f.getName();
 				}
-				conf.add(ConfigParameterField.create(config, f, keyPrefix + key, p.convert()));
+				conf.add(ConfigParameterField.create(configuration, f, keyPrefix + key, p.convert()));
 			}
 		}
 		if (conf.isEmpty()) {
@@ -70,7 +76,8 @@ final class ConfigSupport {
 	}
 
 	/**
-	 * Retrieves the description of elem if it is annotated with {@code Description}.
+	 * Retrieves the description of elem if it is annotated with {@link Description}.
+	 * @param elem The element with a {@code Description} annotation.
 	 * @return value of the {@code Description} or {@code ""};
 	 */
 	public static String description(AnnotatedElement elem) {

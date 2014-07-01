@@ -8,43 +8,45 @@ final class Converters {
 	 * Returns the default converter for all primitive data types, their respective wrappers,
 	 * String and enum types.
 	 * {@code converterFor} does not handle arrays.
-	 * If {@code c} is {@code null} or {@code Void.class}, it returns {@code NULL_CONVERTER}.
-	 * If no fitting converter exists, it returns {@code null}.
+	 * If {@code c} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
+	 * @param type Class of the conversion type.
+	 * @param <T> The conversion type.
+	 * @return The fitting Converter or {@code null}.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Converter<T> converterFor(Class<T> c) {
-		if (c == null || c == Void.class) {
+	public static <T> Converter<T> converterFor(Class<T> type) {
+		if (type == null || type == Void.class) {
 			return (Converter<T>) NULL_CONVERTER;
 		}
-		if (c == boolean.class || c == Boolean.class) {
+		if (type == boolean.class || type == Boolean.class) {
 			return (Converter<T>) BOOLEAN_CONVERTER;
 		}
-		if (c == char.class || c == Character.class) {
+		if (type == char.class || type == Character.class) {
 			return (Converter<T>) CHAR_CONVERTER;
 		}
-		if (c == byte.class || c == Byte.class) {
+		if (type == byte.class || type == Byte.class) {
 			return (Converter<T>) BYTE_CONVERTER;
 		}
-		if (c == short.class || c == Short.class) {
+		if (type == short.class || type == Short.class) {
 			return (Converter<T>) SHORT_CONVERTER;
 		}
-		if (c == int.class || c == Integer.class) {
+		if (type == int.class || type == Integer.class) {
 			return (Converter<T>) INT_CONVERTER;
 		}
-		if (c == long.class || c == Long.class) {
+		if (type == long.class || type == Long.class) {
 			return (Converter<T>) LONG_CONVERTER;
 		}
-		if (c == float.class || c == Float.class) {
+		if (type == float.class || type == Float.class) {
 			return (Converter<T>) FLOAT_CONVERTER;
 		}
-		if (c == double.class || c == Double.class) {
+		if (type == double.class || type == Double.class) {
 			return (Converter<T>) DOUBLE_CONVERTER;
 		}
-		if (c == String.class) {
+		if (type == String.class) {
 			return (Converter<T>) STRING_CONVERTER;
 		}
-		if (c.isEnum()) {
-			return EnumConverter.create(c);
+		if (type.isEnum()) {
+			return EnumConverter.create(type);
 		}
 		return null;
 	}
