@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a class grouping multiple configure parameters.
+ * Marks a class with configuration parameters.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -14,7 +14,7 @@ public @interface Module {
 
 	/**
 	 * Returns the name of this module.
-	 * Callers of this method should use {@code getClass().getSimpleName()} as the name if this is {@code ""}.
+	 * If it is {@code ""}, callers of this method should use {@code getClass().getSimpleName()} instead.
 	 */
 	String name() default "";
 
@@ -26,7 +26,7 @@ public @interface Module {
 	String tag() default "";
 
 	/**
-	 * Returns the key prefix used for all configure parameters this class contains.
+	 * Returns the key prefix used for all configuration parameters this class contains.
 	 * To make modules distinguishable, {@code keyPrefix} should end in a separator (e.g. "{@code /}").
 	 */
 	String keyPrefix() default "";

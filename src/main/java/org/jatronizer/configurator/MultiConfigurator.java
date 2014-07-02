@@ -3,7 +3,7 @@ package org.jatronizer.configurator;
 import java.util.*;
 
 /**
- * Manages multiple configure modules.
+ * Manages multiple configuration modules.
  */
 final class MultiConfigurator implements Configurator {
 

@@ -38,8 +38,14 @@ public final class ConfigManager {
 		 * @param envVarPrefix Prefix used when looking up keys in environment variables.
 		 */
 		public HelpPrinter(OutputStream out, String envVarPrefix) {
-			this.out = out == null ? System.err : out;
-			this.envVarPrefix = envVarPrefix == null ? "" : envVarPrefix;
+			if (out == null) {
+				out = System.err;
+			}
+			if (envVarPrefix == null) {
+				envVarPrefix = "";
+			}
+			this.out = out;
+			this.envVarPrefix = envVarPrefix;
 		}
 
 		private void forceWrite(String text) {
@@ -115,7 +121,7 @@ public final class ConfigManager {
 	/**
 	 * Returns the default converter for all primitive data types, their types in boxed form, String and enum types.
 	 * {@code converterFor} does not handle arrays.
-	 * If {@code c} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
+	 * If {@code type} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
 	 * @param type Class of the conversion type.
 	 * @param <T> The conversion type.
 	 * @return The fitting Converter or {@code null}.
@@ -169,8 +175,6 @@ public final class ConfigManager {
 	 * Creates a module from a configuration without using the annotations.
 	 * In most cases, this will be used if the same module should be used twice but with different
 	 * key prefixes and another usage.
-	 * For example, it enables using smtp module configuration for warn and error logs and for a customer facing
-	 * newsletter and keep both separate.
 	 * If no customization is needed and {@link Parameter} and optionally also {@code Module} and
 	 * {@code Description} annotations are used, {@link #configure(Object[])} should be used with
 	 * {@code configuration} as the single argument.
@@ -306,8 +310,8 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Sets configuration options from environment variables. See {@link #getEnv(java.util.Map, String[],
-	 * String)} for details.
+	 * Sets configuration options from environment variables.
+	 * See {@link #getEnv(java.util.Map, String[], String)} for details.
 	 * @param configurator The configurator managing the configuration options.
 	 * @param envVarPrefix The common prefix for environment variables.
 	 */

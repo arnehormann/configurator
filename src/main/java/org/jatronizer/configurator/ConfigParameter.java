@@ -7,7 +7,7 @@ package org.jatronizer.configurator;
  */
 public interface ConfigParameter<C,P> extends Converter<P> {
 	/**
-	 * Retrieves the key used to address the configure parameter.
+	 * Retrieves the key used to address the configuration parameter.
 	 */
 	String key();
 
@@ -53,12 +53,12 @@ public interface ConfigParameter<C,P> extends Converter<P> {
 	String description(String option);
 
 	/**
-	 * Retrieves the {@code String} form of the configuration parameter on the specified configure instance.
+	 * Retrieves the {@code String} form of the configuration parameter on the specified configuration.
 	 */
 	String get(C configuration);
 
 	/**
-	 * Sets the configure parameter on the specified configuration instance to a value given in {@code String} format.
+	 * Sets the configuration parameter on the specified configuration to a value given in {@code String} format.
 	 */
 	void set(C configuration, String value);
 }

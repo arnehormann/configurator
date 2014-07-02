@@ -141,7 +141,7 @@ final class Converters {
 	};
 
 	/**
-	 * Returns the String as is (even if it's {@code null}).
+	 * Returns the String as is (even if it is {@code null}).
 	 */
 	public static final Converter<String> STRING_CONVERTER = new Converter<String>() {
 		public String fromString(String value) {return value;}

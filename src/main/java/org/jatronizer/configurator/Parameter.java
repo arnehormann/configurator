@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks fields used for externally changeable configure.
+ * Marks fields used as configuration parameters.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

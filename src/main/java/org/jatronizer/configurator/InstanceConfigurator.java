@@ -3,35 +3,35 @@ package org.jatronizer.configurator;
 import java.util.*;
 
 /**
- * An InstanceConfigurator manages the configure of an application or a subsystem.
+ * An InstanceConfigurator manages the configuration of an application or a subsystem.
  *
- * It assists keeping the whole configure of a system and the description of available configure
+ * It assists keeping the whole configuration of a system and the description of available configuration
  * options in one place and provides tools to simplify generating specific help texts and examples.
- * It also encourages close coupling of code and its description and keeping them in sync.
+ * It also encourages tight coupling of code and its description and keeping them in sync.
  *
- * The managed configure is an Object of any type with fields annotated with {@code @Parameter}.
+ * The managed configuration is an Object of any type with fields annotated with {@code @Parameter}.
  * The field name, type and additional optional information from the annotation are used to populate the fields
- * from specified sources. ConfigManager changes at runtime are possible, too.
+ * from specified sources. Configuration changes at runtime are possible, too.
  *
- * ConfigManager parameters are set in the order of arrival - later ones overwrite earlier ones.
- * This can be used to e.g. initialize a system with default values, then overwrite those with
- * a configure file, then environment variables where given and last from command line arguments.
+ * Configuration parameters are set in the order of arrival - later ones overwrite earlier ones.
+ * This can be used to e.g. initialize a system with default values, then overwrite those with parameters from
+ * a configuration file, then environment variables and last from command line arguments.
  *
- * To use this class in a multi-threaded context, all read accesses of configure fields should be synchronized
- * on the configure Object.
+ * To use this class in a multi-threaded context, all read accesses of configuration fields should be synchronized
+ * on the configuration Object.
  *
- * @param <C> the type of the configure instance
+ * @param <C> the type of the configuration instance
  */
 final class InstanceConfigurator<C> implements Configurator {
 
 	/**
-	 * Creates a configure manager.
-	 * The configure is an object with fields annotated with {@link Parameter}.
-	 * @param configuration an instance of a configure.
+	 * Creates a configuration manager.
+	 * The configuration is an object with fields annotated with {@link Parameter}.
+	 * @param configuration an instance of a configuration.
 	 *               It is used by the builder to determine available fields and their types
 	 *               and to get their default values (the one set on the instance passed here).
 	 *               The InstanceConfigurator assumes ownership - you should not write to any of the fields
-	 *               yourself. Read access to fields have to be synchronized on the configure object
+	 *               yourself. Read access to fields have to be synchronized on the configuration object
 	 *               when concurrent accesses are possible.
 	 *               {@link Module} and {@link Description} annotations are processed.
 	 */
@@ -54,16 +54,16 @@ final class InstanceConfigurator<C> implements Configurator {
 	}
 
 	/**
-	 * Creates a configure manager.
-	 * @param configuration An instance of a configure.
+	 * Creates a configuration manager.
+	 * @param configuration An instance of a configuration.
 	 *               The InstanceConfigurator assumes ownership - you should not write to any of the fields
-	 *               yourself. Read access to fields have to be synchronized on the configure object
+	 *               yourself. Read access to fields have to be synchronized on the configuration object
 	 *               when concurrent accesses are possible.
-	 * @param name ConfigManager module name.
+	 * @param name Configuration module name.
 	 * @param keyPrefix Prefix to add to all keys contained in this module.
 	 * @param tag An optional tag or space separated list of tags for the module.
 	 * @param description Answer to the question "What is this module used for?".
-	 * @param params Managed configure parameters, must all represent fields on {@code configure}.
+	 * @param params Managed configuration parameters, must all represent fields on {@code configuration}.
 	 */
 	public static <C> InstanceConfigurator<C> control(
 			C configuration, String name, String keyPrefix, String tag, String description,

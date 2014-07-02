@@ -10,8 +10,8 @@ import java.util.Comparator;
  * {@code ConfigParameterField} represents one of the parameters managed by a {@code InstanceConfigurator}.
  * It provides methods to get and set values of the parameter and to access metadata,
  * e.g. the parameter type and available values if it's an enum.
- * @param <C> Type of the configure.
- * @param <P> Type of the configure parameter.
+ * @param <C> Type of the configuration.
+ * @param <P> Type of the configuration parameter.
  */
 final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 

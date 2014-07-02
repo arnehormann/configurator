@@ -6,7 +6,7 @@ import java.util.*;
 
 final class ConfigSupport {
 
-	// Can not be instantiated
+	// Static class without instances, constructor is hidden
 	private ConfigSupport() {}
 
 	/**
