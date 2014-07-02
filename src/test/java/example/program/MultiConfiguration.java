@@ -58,7 +58,7 @@ public class MultiConfiguration {
 		String[] unknownArgs = ConfigManager.setFromArgs(conf, args);
 
 		// print help text in default format:
-		// see ConfigManager$HelpPrinter for the implementation.
+		// see HelpPrinter for the implementation.
 		// This could also be used to generate PDFs or a JSON API documentation.
 		ConfigManager.printHelpFor(conf, APP_PREFIX, System.err);
 
