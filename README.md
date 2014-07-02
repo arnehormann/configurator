@@ -1,6 +1,8 @@
 # configurator
-Use POJOs for configuration and have all configuration options in one place.
 This library vastly simplifies requirement [3 of the 12 factor apps: Configuration](http://12factor.net/config).
+Use POJOs for configuration and have all configuration options in one place.
+Autogenerate documentation in various formats (some assembly required).
+
 
 It's [MIT-licensed](https://raw.github.com/jatronizer/configurator/master/LICENSE).
 
@@ -8,33 +10,57 @@ Current status: [![Build Status](https://travis-ci.org/jatronizer/configurator.p
 .org/jatronizer/configurator) *(master branch)*
 
 ## Motivation
-The configuration part in the 12factor model is excellent, it is extremely configurable and fast.
+When I read the 12factor model, I was especially impressed by the configuration part - put everything in environment variables.
 
 A batch file starting the system can also be the configuration.
+
 It can be copied and adapted to easily start multiple instances or use different backing services.
+
 Users can store selected values in their profile.
 
-But how does it look *in* the system? How do you know which configuration options are available?
+Brilliant.
 
-Probably by reading the documentation - which sucks.
+Then I inherited a codebase. It requires some configuration files in different formats (ini-like + Xml) and lots and lots of parameters. Some are from external libraries. Some values are overwritten. Some even more than once. It is a nightmare to find out what part influences the system in what way.
 
-It is not part of the code and requires effort and processes to always keep both in sync.
-It may omit parameters. It may not be detailed or belong to a different version.
+I desperately want to make it 12factor.
 
-This library was created to concentrate all configuration options a module has in one single Object.
-It fuses the documentation to the code and allows to create it synthetically.
+But what does it take to allow this *in* the system?
+
+How do I avoid the unholy mess I inherited?
+How do I discover which configuration options are available and what they do?
+
+To discover the available parameters, there's documentation - which sucks.
+
+Documentation is meant for human consumption.
+
+It is extremely important and absolutely necessary, but...
+* it may be inaccurate,
+* it may be incomplete,
+* it is not automatically validated on deployment and
+* I have to write it first.
+
+That's a shame, because a lot of information is already present and I don't see why I should duplicate that.
+
+The JVM knows the default value of a field. It knows the type and name. Why not just use those?
+
+It only has to know what variables are used as externally accessible configuration options.
+
+This library was created to concentrate all configuration options in one single Object.
+It can do so for multiple modules with multiple instances per module.
+It fuses the documentation to the code and allows generation of documentation in different formats.
 Default values and descriptions are used from the code and never have to be kept in sync.
-If desired, values can be changed on the fly - e.g. by a REST api.
+If desired, values can be read or even changed after startup - e.g. by exporting it in a web api.
 
 ## Usage
 Create a class with fields for all configuration options you need in a module.
 
-Annotate all configurable fields with `@Parameter`.
-  * Assign an optional `key` String to reference the field. If you omit it, the field name is used.
-  * Assign a `converter` to control the conversion between String and the field type.
+Supported field types are all primitive types, `String` and every kind of `enum`. A little assembly is required for anything else - namely a two-way converter between the type and a String representation.
 
-Optionally annotate the field with `@Description` and provide a description of what the parameter does.
-This documentation is contained in the compiled class file and always matches the version of the source file.
+If you want to, annotate the class with `@Module` to provide a description of what it is used for.
+
+Annotate all configurable fields with `@Parameter`. Assign an optional `key` to reference the field. If you omit it, the field name is used. You can also assign the `converter` mentioned above. And you can `tag` the parameter if you want to group it in the documentation.
+
+Annotate the field with `@Description` and provide a description of what the parameter does.
 
 Create a `Configurator` with `ConfigManager.configure`.
 
