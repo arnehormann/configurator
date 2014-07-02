@@ -6,8 +6,7 @@ Autogenerate documentation in various formats (some assembly required).
 
 It's [MIT-licensed](https://raw.github.com/jatronizer/configurator/master/LICENSE).
 
-Current status: [![Build Status](https://travis-ci.org/jatronizer/configurator.png?branch=master)](https://travis-ci
-.org/jatronizer/configurator) *(master branch)*
+Current status: [![Build Status](https://travis-ci.org/jatronizer/configurator.png?branch=master)](https://travis-ci.org/jatronizer/configurator) *(master branch)*
 
 ## Motivation
 When I read the 12factor model, I was especially impressed by the configuration part - put everything in environment variables.
