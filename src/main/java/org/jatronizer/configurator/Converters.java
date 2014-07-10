@@ -96,7 +96,7 @@ final class Converters {
 	 */
 	public static final Converter<Short> SHORT_CONVERTER = new Converter<Short>() {
 		public Short fromString(String value) {return Short.valueOf(value);}
-		public String toString(Short value) {return Short.toString(value);}
+		public String toString(Short value) {return Short.toString(value) + "0";}
 		public String toString() {return "ShortConverter";}
 	};
 
