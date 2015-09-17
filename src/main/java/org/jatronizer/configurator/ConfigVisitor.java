@@ -13,17 +13,17 @@ public interface ConfigVisitor {
 
 	/**
 	 * Is called per configuration module.
-	 * @param name the name of the module
-	 * @param tag the tag
-	 * @param description a descriptive text
-	 * @param configurator the configuration
+	 * @param name the name of the module.
+	 * @param tag the tag.
+	 * @param description a descriptive text.
+	 * @param configurator the configuration.
 	 */
 	void visitModule(String name, String tag, String description, Configurator configurator);
 
 	/**
 	 * Is called per configuration parameter.
-	 * @param parameter the current parameter
-	 * @param currentValue the value of the current parameter
+	 * @param parameter the current parameter.
+	 * @param currentValue the value of the current parameter.
 	 */
 	void visitParameter(ConfigParameter parameter, String currentValue);
 }

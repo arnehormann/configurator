@@ -51,7 +51,7 @@ final class Converters {
 	}
 
 	/**
-	 * Converts between the Strings "true" or "false" and their representations as Boolean
+	 * Converts between the Strings "true" or "false" and their representations as Boolean.
 	 */
 	public static final Converter<Boolean> BOOLEAN_CONVERTER = new Converter<Boolean>() {
 		public Boolean fromString(String value) {
@@ -68,7 +68,7 @@ final class Converters {
 	};
 
 	/**
-	 * Converts between one-char Strings and Character
+	 * Converts between one-char Strings and Character.
 	 */
 	public static final Converter<Character> CHAR_CONVERTER = new Converter<Character>() {
 		public Character fromString(String value) {
@@ -82,7 +82,7 @@ final class Converters {
 	};
 
 	/**
-	 * Converts between a numeric String in decimal notation and Byte
+	 * Converts between a numeric String in decimal notation and Byte.
 	 */
 	public static final Converter<Byte> BYTE_CONVERTER = new Converter<Byte>() {
 		public Byte fromString(String value) {return Byte.valueOf(value);}
@@ -91,7 +91,7 @@ final class Converters {
 	};
 
 	/**
-	 * Converts between a numeric String in decimal notation and Short
+	 * Converts between a numeric String in decimal notation and Short.
 	 */
 	public static final Converter<Short> SHORT_CONVERTER = new Converter<Short>() {
 		public Short fromString(String value) {return Short.valueOf(value);}
@@ -100,7 +100,7 @@ final class Converters {
 	};
 
 	/**
-	 * Converts between a numeric String in decimal notation and Integer
+	 * Converts between a numeric String in decimal notation and Integer.
 	 */
 	public static final Converter<Integer> INT_CONVERTER = new Converter<Integer>() {
 		public Integer fromString(String value) {return Integer.valueOf(value);}
@@ -109,7 +109,7 @@ final class Converters {
 	};
 
 	/**
-	 * Converts between a numeric String in decimal notation and Long
+	 * Converts between a numeric String in decimal notation and Long.
 	 */
 	public static final Converter<Long> LONG_CONVERTER = new Converter<Long>() {
 		public Long fromString(String value) {return Long.valueOf(value);}
@@ -228,7 +228,7 @@ final class Converters {
 
 		public boolean equals(Object o) {
 			return this == o ||
-					o.getClass() == EnumConverter.class && (valueOf.equals(((EnumConverter) o).valueOf));
+					o != null && o.getClass() == EnumConverter.class && (valueOf.equals(((EnumConverter) o).valueOf));
 		}
 
 		public int hashCode() {

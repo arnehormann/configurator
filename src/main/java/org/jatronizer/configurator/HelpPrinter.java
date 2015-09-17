@@ -17,14 +17,6 @@ final class HelpPrinter implements ConfigVisitor {
 	private final String envVarPrefix;
 
 	/**
-	 * Create a new HelpPrinter printing to {@link System#err}.
-	 * @param envVarPrefix Prefix used when looking up keys in environment variables.
-	 */
-	public HelpPrinter(String envVarPrefix) {
-		this(null, envVarPrefix);
-	}
-
-	/**
 	 * Create a new HelpPrinter printing to {@code out}.
 	 * @param out Help text is printed here; when {@code out} is {@code null}, {@link System#err} is used.
 	 * @param envVarPrefix Prefix used when looking up keys in environment variables.
@@ -77,7 +69,7 @@ final class HelpPrinter implements ConfigVisitor {
 			if (defaultValue == null) {
 				text += "\tvalue: '" + value + "'\n";
 			} else if (value.equals(defaultValue)) {
-				text += "\tvalue: '" + value + "' (default)\n";
+				text += "\tvalue: '" + value + "' (is default)\n";
 			} else {
 				text += "\tvalue: '" + value + "', default: '" + defaultValue + "'\n";
 			}
@@ -92,18 +84,18 @@ final class HelpPrinter implements ConfigVisitor {
 				}
 			}
 			for (String option : options) {
-				text += "\t  ";
-				int paddingNeeded = longest - option.length();
+				text += "\t  " + option;
+				String pdesc = parameter.description(option);
+				if (pdesc == null || "".equals(pdesc)) {
+					text += "\n";
+					continue;
+				}
+				int paddingNeeded = 2 + longest - option.length();
 				while (paddingNeeded > EMPTY.length()) {
 					text += EMPTY;
 					paddingNeeded -= EMPTY.length();
 				}
-				text += EMPTY.substring(0, longest) + option;
-				String pdesc = parameter.description(option);
-				if (!"".equals(pdesc)) {
-					text += "  " + pdesc;
-				}
-				text += "\n";
+				text += EMPTY.substring(0, paddingNeeded) + pdesc + "\n";
 			}
 		}
 		forceWrite(text);

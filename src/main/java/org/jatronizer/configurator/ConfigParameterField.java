@@ -26,13 +26,15 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 
 	@SuppressWarnings("unchecked")
 	public static <C,P> ConfigParameterField<C,P> create(
-			C configuration, Field field,
-			String key, String tag,
-			Class<P> converterClass) {
-		if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) != 0) {
+			C configuration,
+			Field field,
+			String key,
+			String tag,
+			Class<P> converterClass
+	) {
+		if ((field.getModifiers() & Modifier.STATIC) != 0) {
 			// static fields can not be set on instances
-			// final could have been optimized and may not have an effect
-			throw new ConfigException(field.toString() + " must not be static or final");
+			throw new ConfigException(field.toString() + " must not be static");
 		}
 		if (configuration.getClass() != field.getDeclaringClass()) {
 			throw new ConfigException(field.toString() + " is not declared on " + configuration.getClass());
@@ -114,9 +116,15 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	}
 
 	private ConfigParameterField(
-			String key, Field field, String defaultValue, String tag,
-			String description, Converter<P> converter,
-			String[] enumNames, Field[] enumFields) {
+			String key,
+			Field field,
+			String defaultValue,
+			String tag,
+			String description,
+			Converter<P> converter,
+			String[] enumNames,
+			Field[] enumFields
+	) {
 		this.key = key;
 		this.defaultValue = defaultValue;
 		this.tag = tag;

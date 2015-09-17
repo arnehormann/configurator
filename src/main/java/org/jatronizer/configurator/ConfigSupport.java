@@ -29,7 +29,13 @@ final class ConfigSupport {
 				if ("".equals(key)) {
 					key = f.getName();
 				}
-				conf.add(ConfigParameterField.create(configuration, f, keyPrefix + key, p.tag(), p.converter()));
+				conf.add(ConfigParameterField.create(
+						configuration,
+						f,
+						keyPrefix + key,
+						p.tag(),
+						p.converter()
+				));
 			}
 		}
 		if (conf.isEmpty()) {
@@ -67,7 +73,7 @@ final class ConfigSupport {
 
 		private static String formatKey(String key, String separator) {
 			return key
-					// keyPrefix each sequence of capital letters with separator
+					// prefix each sequence of capital letters with separator
 					.replaceAll("([A-Z]+)", separator + "\\1")
 					// change all non alphanumeric char sequences to separator
 					.replaceAll("[^A-Za-z0-9]+", separator)
@@ -108,8 +114,10 @@ final class ConfigSupport {
 	}
 
 	public static int values(
-			Map<String, String> dst,
-			String[] keys, String keyPrefix, KeyFormatter format,
+			Map<String, String> dest,
+			String[] keys,
+			String keyPrefix,
+			KeyFormatter format,
 			Map<String, String> src) {
 		if (keyPrefix == null) {
 			keyPrefix = "";
@@ -119,8 +127,8 @@ final class ConfigSupport {
 			String mapped = format.from(keyPrefix + key);
 			String value = src.get(mapped);
 			if (value != null) {
-				if (dst != null) {
-					dst.put(key, value);
+				if (dest != null) {
+					dest.put(key, value);
 				}
 				numSet++;
 			}
@@ -129,8 +137,11 @@ final class ConfigSupport {
 	}
 
 	public static int parseValues(
-			Map<String, String> dst, Collection<String> dstUnused,
-			String[] keys, String keyPrefix, KeyFormatter format,
+			Map<String, String> dest,
+			Collection<String> destUnused,
+			String[] keys,
+			String keyPrefix,
+			KeyFormatter format,
 			String[] src) {
 		if (keyPrefix == null) {
 			keyPrefix = "";
@@ -143,12 +154,12 @@ final class ConfigSupport {
 		for (String raw : src) {
 			String[] pair = raw.split("=", 2);
 			if (pair.length == 2 && map.containsKey(pair[0])) {
-				if (dst != null) {
-					dst.put(map.get(pair[0]), pair[1]);
+				if (dest != null) {
+					dest.put(map.get(pair[0]), pair[1]);
 				}
 				numSet++;
-			} else if (dstUnused != null) {
-				dstUnused.add(raw);
+			} else if (destUnused != null) {
+				destUnused.add(raw);
 			}
 		}
 		return numSet;

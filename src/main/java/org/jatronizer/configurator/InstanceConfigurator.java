@@ -20,7 +20,7 @@ import java.util.*;
  * To use this class in a multi-threaded context, all read accesses of configuration fields should be synchronized
  * on the configuration Object.
  *
- * @param <C> the type of the configuration instance
+ * @param <C> the type of the configuration instance.
  */
 final class InstanceConfigurator<C> implements Configurator {
 
@@ -66,8 +66,13 @@ final class InstanceConfigurator<C> implements Configurator {
 	 * @param params Managed configuration parameters, must all represent fields on {@code configuration}.
 	 */
 	public static <C> InstanceConfigurator<C> control(
-			C configuration, String name, String keyPrefix, String tag, String description,
-			ConfigParameter<C,?>[] params) {
+			C configuration,
+			String name,
+			String keyPrefix,
+			String tag,
+			String description,
+			ConfigParameter<C,?>[] params
+	) {
 		// to synchronize access on an instance, check that all params share the same declaring class
 		Class configType = configuration.getClass();
 		for (ConfigParameter param : params) {
@@ -86,8 +91,12 @@ final class InstanceConfigurator<C> implements Configurator {
 	private final String description;
 
 	private InstanceConfigurator(
-			C config, ConfigParameter[] parameters,
-			String name, String tag, String desc) {
+			C config,
+			ConfigParameter[] parameters,
+			String name,
+			String tag,
+			String desc
+	) {
 		this.config = config;
 		String[] keys = new String[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -142,28 +151,39 @@ final class InstanceConfigurator<C> implements Configurator {
 		if (p == null) {
 			return 0;
 		}
-		p.set(config, value);
-		return 1;
+		try {
+			p.set(config, value);
+			return 1;
+		} catch (Exception e) {
+			// probably a conversion error
+			return 0;
+		}
 	}
 
-	public int set(Map<String, String> configuration) {
-		int numSet = 0;
+	public Map<String, String> set(Map<String, String> configuration) {
+		ErrorMap invalid = ErrorMap.EMPTY;
 		synchronized (config) {
 			for (Map.Entry<String, String> e : configuration.entrySet()) {
-				numSet += set(e.getKey(), e.getValue());
+				if (set(e.getKey(), e.getValue()) == 0) {
+					invalid = invalid.fput(e.getKey(), e.getValue());
+				}
 			}
 		}
-		return numSet;
+		return invalid;
 	}
 
-	public int set(Properties configuration) {
-		int numSet = 0;
+	public Map<String, String> set(Properties configuration) {
+		ErrorMap invalid = ErrorMap.EMPTY;
 		synchronized (config) {
 			for (Map.Entry<Object, Object> e : configuration.entrySet()) {
-				numSet += set((String) e.getKey(), (String) e.getValue());
+				String key = (String) e.getKey();
+				String value = (String) e.getValue();
+				if (set(key, value) == 0) {
+					invalid = invalid.fput(key, value);
+				}
 			}
 		}
-		return numSet;
+		return invalid;
 	}
 
 	@SuppressWarnings("unchecked")

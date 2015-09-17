@@ -8,6 +8,7 @@ import java.util.*;
 
 /**
  * Creates managed configurations.
+ * The class this library revolves around.
  */
 public final class ConfigManager {
 
@@ -145,7 +146,7 @@ public final class ConfigManager {
 	 * and the current and default values.
 	 * @param configurator The {@link Configurator}.
 	 * @param envVarPrefix The common prefix for environment variables. It must be the same as in
-	 * {@link #getEnv(java.util.Map, String[], String)} and {@link #setFromEnv(Configurator, String)}.
+	 * {@link #getEnv(Map, String, String[])} and {@link #setFromEnv(Configurator, String)}.
 	 * @param out The target output stream. This should be {@code System.err} in most cases.
 	 */
 	public static void printHelpFor(Configurator configurator, String envVarPrefix, OutputStream out) {
@@ -161,7 +162,7 @@ public final class ConfigManager {
 	 *
 	 * Example: the key "myApp" becomes "-my-app", "HTML$Valües" becomes "-html-val-es".
 	 * @param dest The Map where the key-value pairs are stored. To only count valid arguments, pass {@code null}.
-	 * @param destUnused The Collection where all non matching arguments are stored. May be {@code null}.
+	 * @param destUnused The Collection where all unused arguments are stored. May be {@code null}.
 	 * @param keys All valid keys in their regular format.
 	 * @param args All arguments that should be parsed for keys.
 	 * @return The number of pairs that were or would have been stored in {@code dest}.
@@ -183,16 +184,19 @@ public final class ConfigManager {
 	 *
 	 * Example: the key "myApp" becomes "MY_APP", "HTML$Valües" becomes "HTML_VAL_ES".
 	 * @param dest The Map where the key-value pairs are stored. May be {@code null}.
+	 * @param envPrefix The common prefix for environment variables. May be {@code null}.
 	 * @param keys All valid keys in their regular format.
-	 * @param envVarPrefix The common prefix for environment variables.
 	 * @return The number of pairs that were or would have been stored in {@code dest}.
 	 */
-	public static int getEnv(Map<String, String> dest, String[] keys, String envVarPrefix) {
+	public static int getEnv(Map<String, String> dest, String envPrefix, String[] keys) {
 		String[] collisions = ConfigSupport.collisions(env, keys);
 		if (collisions.length > 0) {
 			throw new ConfigException("collisions for environment keys: " + Arrays.toString(collisions));
 		}
-		return ConfigSupport.values(dest, keys, envVarPrefix, env, System.getenv());
+		if (envPrefix == null) {
+			envPrefix = "";
+		}
+		return ConfigSupport.values(dest, keys, envPrefix, env, System.getenv());
 	}
 
 	/**
@@ -200,13 +204,16 @@ public final class ConfigManager {
 	 * recognized. See {@link #getArgs} for details.
 	 * @param configurator The configurator managing the configuration options.
 	 * @param args The command line arguments.
-	 * @return Unrecognized arguments.
+	 * @return Skipped arguments (unknown key or illegal value).
 	 */
 	public static String[] setFromArgs(Configurator configurator, String[] args) {
 		ArrayList<String> unused = new ArrayList<String>(args.length / 2);
 		HashMap<String, String> config = new HashMap<String, String>(args.length, 1.0f);
 		getArgs(config, unused, configurator.keys(), args);
-		configurator.set(config);
+		Map<String, String> invalid = configurator.set(config);
+		for (Map.Entry<String, String> entry : invalid.entrySet()) {
+			unused.add(entry.getKey() + "=" + entry.getValue());
+		}
 		return unused.toArray(new String[unused.size()]);
 	}
 
@@ -214,12 +221,12 @@ public final class ConfigManager {
 	 * Sets configuration options from environment variables.
 	 * See {@link #getEnv} for details.
 	 * @param configurator The configurator managing the configuration options.
-	 * @param envVarPrefix The common prefix for environment variables.
+	 * @param envVarPrefix Common prefix for environment variables used by the program.
 	 */
 	public static void setFromEnv(Configurator configurator, String envVarPrefix) {
 		Map<String, String> src = System.getenv();
 		HashMap<String, String> config = new HashMap<String, String>(src.size(), 1.0f);
-		getEnv(config, configurator.keys(), envVarPrefix);
+		getEnv(config, envVarPrefix, configurator.keys());
 		configurator.set(config);
 	}
 }

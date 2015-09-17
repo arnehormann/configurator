@@ -102,20 +102,20 @@ final class MultiConfigurator implements Configurator {
 		return configurators[configForKey[idx]].set(key, value);
 	}
 
-	public int set(Map<String, String> configuration) {
-		int numSet = 0;
+	public Map<String, String> set(Map<String, String> configuration) {
+		ErrorMap invalid = ErrorMap.EMPTY;
 		for (Configurator configurator : configurators) {
-			numSet += configurator.set(configuration);
+			invalid.fputAll(configurator.set(configuration));
 		}
-		return numSet;
+		return invalid;
 	}
 
-	public int set(Properties configuration) {
-		int numSet = 0;
+	public Map<String, String> set(Properties configuration) {
+		ErrorMap invalid = ErrorMap.EMPTY;
 		for (Configurator configurator : configurators) {
-			numSet += configurator.set(configuration);
+			invalid.fputAll(configurator.set(configuration));
 		}
-		return numSet;
+		return invalid;
 	}
 
 	@SuppressWarnings("unsafe")

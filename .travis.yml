@@ -1,5 +1,18 @@
+sudo: false
+
 language: java
+
 jdk:
   - openjdk7
   - oraclejdk7
   - oraclejdk8
+
+branches:
+  only:
+    - master
+
+env:
+  - TERM=dumb
+
+before_install:
+  - chmod +x gradlew
