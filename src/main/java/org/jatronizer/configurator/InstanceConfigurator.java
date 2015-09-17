@@ -3,7 +3,7 @@ package org.jatronizer.configurator;
 import java.util.*;
 
 /**
- * An InstanceConfigurator manages the configuration of an application or a subsystem.
+ * Manages the configuration of an application or a subsystem.
  *
  * It assists keeping the whole configuration of a system and the description of available configuration
  * options in one place and provides tools to simplify generating specific help texts and examples.
@@ -111,16 +111,10 @@ final class InstanceConfigurator<C> implements Configurator {
 		return parameters[i];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public boolean hasKey(String key) {
 		return Arrays.binarySearch(keys, key) > 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String[] keys() {
 		String[] keys = new String[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
@@ -129,16 +123,10 @@ final class InstanceConfigurator<C> implements Configurator {
 		return keys;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public ConfigParameter parameter(String key) {
 		return field(key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public String value(String key) {
 		ConfigParameter p = field(key);
@@ -148,9 +136,6 @@ final class InstanceConfigurator<C> implements Configurator {
 		return p.get(config);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public int set(String key, String value) {
 		ConfigParameter p = field(key);
@@ -161,9 +146,6 @@ final class InstanceConfigurator<C> implements Configurator {
 		return 1;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int set(Map<String, String> configuration) {
 		int numSet = 0;
 		synchronized (config) {
@@ -174,9 +156,6 @@ final class InstanceConfigurator<C> implements Configurator {
 		return numSet;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int set(Properties configuration) {
 		int numSet = 0;
 		synchronized (config) {
@@ -187,9 +166,6 @@ final class InstanceConfigurator<C> implements Configurator {
 		return numSet;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public void walk(ConfigVisitor v) {
 		v.visitModule(name, tag, description, this);

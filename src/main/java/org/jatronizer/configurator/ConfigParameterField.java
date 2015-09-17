@@ -127,37 +127,22 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		this.enumFields = enumFields;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String key() {
 		return key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String defaultValue() {
 		return defaultValue;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String tag() {
 		return tag;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String description() {
 		return description;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public String get(C configuration) {
 		try {
@@ -173,9 +158,6 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public void set(C configuration, String value) {
 		try {
 			P v = converter.fromString(value);
@@ -189,38 +171,23 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public Class<P> type() {
 		return (Class<P>) field.getType();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public P fromString(String value) {
 		return converter.fromString(value);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String toString(P value) {
 		return converter.toString(value);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String[] options() {
 		return enumNames.clone();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String description(String option) {
 		Field field = enumField(option);
 		if (field == null) {
@@ -241,30 +208,21 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		return enumFields[i];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public Class<C> outerType() {
 		return (Class<C>) field.getDeclaringClass();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String toString() {
 		return key + " (" + defaultValue + "): " + description;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unchecked")
 	public boolean equals(Object other) {
 		if (this == other) {
 			return true;
 		}
-		if (other.getClass() != ConfigParameterField.class) {
+		if (other == null || other.getClass() != ConfigParameterField.class) {
 			return false;
 		}
 		ConfigParameterField<C,P> opf = (ConfigParameterField<C,P>) other;
@@ -275,9 +233,6 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int hashCode() {
 		return (key.hashCode() ^ ~field.hashCode()) + converter.hashCode();
 	}

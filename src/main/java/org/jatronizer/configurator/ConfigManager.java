@@ -6,6 +6,9 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.*;
 
+/**
+ * Creates managed configurations.
+ */
 public final class ConfigManager {
 
 	// Static class without instances, constructor is hidden
@@ -15,11 +18,11 @@ public final class ConfigManager {
 	static final String ARG_PREFIX = "-";
 
 	/**
-	 * Returns the default converter for all primitive data types, their types in boxed form, String and enum types.
+	 * Retrieves the default converter for all primitive types, their boxed forms, Strings and enums.
 	 * {@code converterFor} does not handle arrays.
 	 * If {@code type} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
-	 * @param type Class of the conversion type.
-	 * @param <T> The conversion type.
+	 * @param type Class of the converted type (e.g. int.class, Boolean.class, MyEnum.class).
+	 * @param <T> The converted type.
 	 * @return The fitting Converter or {@code null}.
 	 */
 	public static <T> Converter<T> converter(Class<T> type) {
@@ -27,15 +30,17 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Creates a {@code ConfigParameter} using the specified details.
-	 * This function can be used as an alternative for external fields not annotated with {@link Parameter}
-	 * or if the code in question should not have external dependencies.
-	 * Using {@code @Parameter} is strongly preferred.
+	 * Creates a {@code ConfigParameter}.
+	 * This function can be used as an alternative for fields in classes not annotated with {@link Parameter},
+	 * e.g. for code from external libraries not under your control or code that must not have a dependency on this
+	 * library.
+	 * It is simpler to use {@code @Parameter} annotations and call {@link #parameters} instead.
 	 * @param configuration An instance with the parameter field, must not be {@code null}.
 	 * @param field The parameter field, must not be {@code null}.
-	 * @param key The key representing this parameter; name of the field if {@code null}.
-	 * @param tag An optional tag or a space separated list of tags.
+	 * @param key The key representing this parameter as in {@link Parameter#key}; name of the field if {@code null}.
+	 * @param tag An optional tag or a space separated list of tags as in {@link Parameter#tag}.
 	 * @param converterClass The converter between String and the field type, {@code null} for the default.
+	 *        The converter corresponds to {@link Parameter#converter}.
 	 * @param <C> Type of the configuration.
 	 * @param <P> Type of the configuration parameter.
 	 * @return The configuration parameter specified by the arguments.
@@ -68,16 +73,17 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Creates a module from a configuration without using the annotations.
+	 * Creates a module from a configuration that does not use the {@link Module} annotation.
 	 * In most cases, this will be used if the same module should be used twice but with different
 	 * key prefixes and another usage.
 	 * If no customization is needed and {@link Parameter} and optionally also {@code Module} and
 	 * {@code Description} annotations are used, {@link #configure(Object[])} should be used with
 	 * {@code configuration} as the single argument.
 	 * @param configuration An instance containing the fields in {@code params}, must not be {@code null}.
-	 * @param name The name of the module as in {@link Module#name()}.
-	 * @param keyPrefix A common prefix for all keys in this module as in {@link Module#keyPrefix()}.
-	 * @param description A description; an alternative to the {@link Description} annotation.
+	 * @param name The name of the module as in {@link Module#name}.
+	 * @param keyPrefix A common prefix for all keys in this module as in {@link Module#keyPrefix}.
+	 * @param tag A tag as in {@link Module#tag}.
+	 * @param description A description, an alternative to the {@link Description} annotation.
 	 * @param params The configuration parameters, must all reference fields on {@code configuration}.
 	 *               If {@code params} is empty, the result of {@link #parameters(Object, String)} is used.
 	 * @param <C> Type of the configuration.
@@ -95,10 +101,10 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Creates a {@link Configurator} for configurations that have parameters annotated with {@link Parameter} and
-	 * that have unique keys.
-	 * This is also the preferred way to create a {@code Configurator} for a single module that uses
+	 * Creates a {@link Configurator} for configurations with {@link Parameter} annotated fields.
+	 * This is the preferred way to create a {@code Configurator} for a single module that uses
 	 * {@link Parameter} and optionally also {@code Module} and {@code Description} annotations.
+	 * All configurations must have unique keys.
 	 * @param configurations The configuration instances.
 	 * @param <C> Type of the configuration.
 	 * @return Common Configurator for the configurations.
@@ -118,7 +124,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Creates a {@link Configurator} wrapping multiple other configurators.
+	 * Creates a {@link Configurator} wrapping other configurators.
 	 * @param configurators The configurators to be wrapped.
 	 * @return Common Configurator including the specified Configurators.
 	 */
@@ -148,51 +154,50 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Splits argument pairs in form {@code "-" argkey "=" value} and stores the parameter key and the parsed value
-	 * in {@code dst}.
-	 * A {@link ConfigParameter#key()} is converted to an {@code argkey} by changing all chars that are not ANSI
-	 * letters or digits to dashes ("{@code -}"), prefixing all capital letters with dashes and converting the result
-	 * to lower case.
-	 * @param dst The {@link java.util.Map} where the key-value pairs are stored. May be {@code null}.
-	 * @param dstUnused The {@link java.util.Collection} where all non matching arguments are stored.
-	 *                     May be {@code null}.
+	 * Splits argument pairs in form {@code -key=value} and stores the parameter key and the parsed value.
+	 * A {@link ConfigParameter#key} is converted to a command line argument key by changing all chars that are not ANSI
+	 * letters or digits to dashes ({@code -}), prefixing all sequences of uppercase letters with dashes,
+	 * changing sequences of dashes to a single dash and converting the result to lowercase.
+	 *
+	 * Example: the key "myApp" becomes "-my-app", "HTML$Valües" becomes "-html-val-es".
+	 * @param dest The Map where the key-value pairs are stored. To only count valid arguments, pass {@code null}.
+	 * @param destUnused The Collection where all non matching arguments are stored. May be {@code null}.
 	 * @param keys All valid keys in their regular format.
 	 * @param args All arguments that should be parsed for keys.
-	 * @return The number of pairs that were or would have been stored in {@code dst}.
+	 * @return The number of pairs that were or would have been stored in {@code dest}.
 	 */
-	public static int getArgs(Map<String, String> dst, Collection<String> dstUnused, String[] keys, String[] args) {
+	public static int getArgs(Map<String, String> dest, Collection<String> destUnused, String[] keys, String[] args) {
 		String[] collisions = ConfigSupport.collisions(arg, keys);
 		if (collisions.length > 0) {
-			throw new ConfigException("collisions for command line argument keys: " +
-					Arrays.toString(collisions)
-			);
+			throw new ConfigException("collisions for command line argument keys: " + Arrays.toString(collisions));
 		}
-		return ConfigSupport.parseValues(dst, dstUnused, keys, ARG_PREFIX, arg, args);
+		return ConfigSupport.parseValues(dest, destUnused, keys, ARG_PREFIX, arg, args);
 	}
 
 	/**
-	 * Stores all keys and their respective values in the environment in {@code dst}.
-	 * A {@link ConfigParameter#key()} is converted to an environment variable name by prefixing it with
-	 * {@code envVarPrefix}, changing all chars that are not ANSI letters or digits to underscores ("{@code _}"),
-	 * prefixing all capital letters with underscores and converting the result to upper case.
-	 * @param dst The {@link java.util.Map} where the key-value pairs are stored. May be {@code null}.
+	 * Stores values of all keys read from environment variables in {@code dest}.
+	 * A {@link ConfigParameter#key} is converted to an environment variable name by prefixing it with
+	 * {@code envVarPrefix}, changing all chars that are not ANSI letters or digits to underscores ({@code _}),
+	 * prefixing all sequences of uppercase letters with underscores, changing sequences of underscores to a single
+	 * underscore and converting the result to uppercase.
+	 *
+	 * Example: the key "myApp" becomes "MY_APP", "HTML$Valües" becomes "HTML_VAL_ES".
+	 * @param dest The Map where the key-value pairs are stored. May be {@code null}.
 	 * @param keys All valid keys in their regular format.
 	 * @param envVarPrefix The common prefix for environment variables.
-	 * @return The number of pairs that were or would have been stored in {@code dst}.
+	 * @return The number of pairs that were or would have been stored in {@code dest}.
 	 */
-	public static int getEnv(Map<String, String> dst, String[] keys, String envVarPrefix) {
+	public static int getEnv(Map<String, String> dest, String[] keys, String envVarPrefix) {
 		String[] collisions = ConfigSupport.collisions(env, keys);
 		if (collisions.length > 0) {
-			throw new ConfigException("collisions for environment keys: " +
-					Arrays.toString(collisions)
-			);
+			throw new ConfigException("collisions for environment keys: " + Arrays.toString(collisions));
 		}
-		return ConfigSupport.values(dst, keys, envVarPrefix, env, System.getenv());
+		return ConfigSupport.values(dest, keys, envVarPrefix, env, System.getenv());
 	}
 
 	/**
 	 * Sets configuration options from command line arguments and returns the arguments that could not be
-	 * recognized. See {@link #getArgs(java.util.Map, java.util.Collection, String[], String[])} for details.
+	 * recognized. See {@link #getArgs} for details.
 	 * @param configurator The configurator managing the configuration options.
 	 * @param args The command line arguments.
 	 * @return Unrecognized arguments.
@@ -207,7 +212,7 @@ public final class ConfigManager {
 
 	/**
 	 * Sets configuration options from environment variables.
-	 * See {@link #getEnv(java.util.Map, String[], String)} for details.
+	 * See {@link #getEnv} for details.
 	 * @param configurator The configurator managing the configuration options.
 	 * @param envVarPrefix The common prefix for environment variables.
 	 */

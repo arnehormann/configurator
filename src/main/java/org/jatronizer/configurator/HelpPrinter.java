@@ -2,13 +2,14 @@ package org.jatronizer.configurator;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 import static org.jatronizer.configurator.ConfigSupport.KeyFormat.arg;
 import static org.jatronizer.configurator.ConfigSupport.KeyFormat.env;
 
 /**
- * HelpPrinter provides a default format to display a help text on the command line.
- * An instance can be passed to {@link org.jatronizer.configurator.MultiConfigurator#walk(org.jatronizer.configurator.ConfigVisitor)}.
+ * Provides a default format to display a help text on the command line.
+ * An instance can be passed to {@link MultiConfigurator#walk}.
  */
 final class HelpPrinter implements ConfigVisitor {
 
@@ -41,7 +42,7 @@ final class HelpPrinter implements ConfigVisitor {
 
 	private void forceWrite(String text) {
 		try {
-			out.write(text.getBytes());
+			out.write(text.getBytes(Charset.forName("UTF-8")));
 		} catch (IOException e) {
 			throw new ConfigException(e);
 		}
@@ -62,7 +63,7 @@ final class HelpPrinter implements ConfigVisitor {
 	public void visitParameter(ConfigParameter parameter, String value) {
 		final String EMPTY = "                                ";
 		String key = parameter.key();
-		String text = "arg[" + arg.from(ConfigManager.ARG_PREFIX + key) + "] / env[" + env.from(envVarPrefix + key) + "]\n";
+		String text = arg.from(ConfigManager.ARG_PREFIX + key) + ", $" + env.from(envVarPrefix + key) + "\n";
 		String description = parameter.description();
 		if (!"".equals(description)) {
 			text += "\t" + description + "\n";

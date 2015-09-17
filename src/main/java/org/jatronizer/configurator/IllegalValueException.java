@@ -1,8 +1,8 @@
 package org.jatronizer.configurator;
 
 /**
- * A {@code IllegalValueException} is thrown when a parameter value can not be read or written or when the conversion
- * between the parameter type and {@code String} fails.
+ * Signals that a parameter value can not be read or written or that the conversion
+ * between the parameter type and {@code String} failed.
  */
 public class IllegalValueException extends RuntimeException {
 	public IllegalValueException(String msg) {

@@ -1,7 +1,7 @@
 apply plugin: 'java'
-// apply plugin: 'findbugs' // TODO enable when 3.0.0 is released
-apply plugin: 'eclipse'
-apply plugin: 'idea'
+apply plugin: 'findbugs'
+// apply plugin: 'eclipse'
+// apply plugin: 'idea'
 
 repositories {
 	mavenLocal()
@@ -12,22 +12,30 @@ dependencies {
 	testCompile "junit:junit:4.11"
 }
 
+compileJava {
+	sourceCompatibility = 1.6
+	targetCompatibility = 1.6
+}
+
 test { exclude '**/example/**' }
 
-/*
 findbugs {
-	toolVersion = "3.0.0"
+	toolVersion = "3.0.1"
 	effort = "max"
 	reportLevel = "high"
 	reportsDir = file("$project.buildDir/findbugsReports")
 }
-*/
+
+findbugsMain {
+	reports {
+		xml.enabled = false
+		html.enabled = true
+	}
+}
 
 jar {
 	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
-
-//task getHomeDir << { println gradle.gradleHomeDir }
 
 task "createDirs" << {
 	sourceSets*.java.srcDirs*.each { it.mkdirs() }

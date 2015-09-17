@@ -49,28 +49,28 @@ final class ConfigSupport {
 		return parameters;
 	}
 
-	public static interface KeyFormatter {
+	public interface KeyFormatter {
 		String from(String key);
 	}
 
-	public static enum KeyFormat implements KeyFormatter {
+	public enum KeyFormat implements KeyFormatter {
 		arg {
 			public String from(String key) {
-				return formatKey(key, "-").toLowerCase();
+				return formatKey(key, "-").replaceAll("--+", "-").toLowerCase();
 			}
 		},
 		env {
 			public String from(String key) {
-				return formatKey(key, "_").toUpperCase();
+				return formatKey(key, "_").replaceAll("__+", "-").toUpperCase();
 			}
 		};
 
 		private static String formatKey(String key, String separator) {
 			return key
-					// change each non alphanumeric char to separator
-					.replaceAll("[^A-Za-z0-9]", "" + separator)
-					// keyPrefix each capital letter with separator
-					.replaceAll("([A-Z])", separator + "\\1")
+					// keyPrefix each sequence of capital letters with separator
+					.replaceAll("([A-Z]+)", separator + "\\1")
+					// change all non alphanumeric char sequences to separator
+					.replaceAll("[^A-Za-z0-9]+", separator)
 			;
 		}
 	}

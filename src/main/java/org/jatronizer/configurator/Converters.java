@@ -5,8 +5,7 @@ import java.lang.reflect.Method;
 final class Converters {
 
 	/**
-	 * Returns the default converter for all primitive data types, their respective wrappers,
-	 * String and enum types.
+	 * Retrieves the default converter for all primitive types, their boxed forms, Strings and enums.
 	 * {@code converterFor} does not handle arrays.
 	 * If {@code c} is {@code null} or {@code Void.class}, it returns a converter returning {@code null}.
 	 * @param type Class of the conversion type.
@@ -208,9 +207,6 @@ final class Converters {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@SuppressWarnings("unchecked")
 		public P fromString(String value) {
 			try {
@@ -220,9 +216,6 @@ final class Converters {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		public String toString(P value) {
 			try {
 				return (String) name.invoke(value);

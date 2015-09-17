@@ -70,23 +70,14 @@ final class MultiConfigurator implements Configurator {
 		return configurators[configForKey[idx]];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public boolean hasKey(String key) {
 		return Arrays.binarySearch(keys, key) > 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String[] keys() {
 		return keys.clone();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public ConfigParameter parameter(String key) {
 		Configurator configurator = moduleOf(key);
 		if (configurator == null) {
@@ -95,9 +86,6 @@ final class MultiConfigurator implements Configurator {
 		return configurator.parameter(key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public String value(String key) {
 		int idx = Arrays.binarySearch(keys, key);
 		if (idx < 0) {
@@ -106,9 +94,6 @@ final class MultiConfigurator implements Configurator {
 		return configurators[configForKey[idx]].value(key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int set(String key, String value) {
 		int idx = Arrays.binarySearch(keys, key);
 		if (idx < 0) {
@@ -117,9 +102,6 @@ final class MultiConfigurator implements Configurator {
 		return configurators[configForKey[idx]].set(key, value);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int set(Map<String, String> configuration) {
 		int numSet = 0;
 		for (Configurator configurator : configurators) {
@@ -128,9 +110,6 @@ final class MultiConfigurator implements Configurator {
 		return numSet;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public int set(Properties configuration) {
 		int numSet = 0;
 		for (Configurator configurator : configurators) {
@@ -139,9 +118,6 @@ final class MultiConfigurator implements Configurator {
 		return numSet;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@SuppressWarnings("unsafe")
 	public void walk(ConfigVisitor v) {
 		for (Configurator conf : configurators) {

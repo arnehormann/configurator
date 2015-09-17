@@ -1,7 +1,7 @@
 package org.jatronizer.configurator;
 
 /**
- * A {@code ConfigException} is thrown when an Object can not be used as a configuration.
+ * Signals that an Object could not be used as a configuration.
  */
 public final class ConfigException extends RuntimeException {
 	public ConfigException(String msg) {
