@@ -24,7 +24,7 @@ public class MultiConfiguration {
 		// prefix for all keys - also makes environment variables start with MYAPP_
 		final String APP_PREFIX = "myapp/";
 
-		// configuration for warnings by mail 
+		// configuration for warnings by mail
 		MailConfig warn = new MailConfig();
 		// use port 25 instead of 587 for warn mails
 		warn.port = 25;
@@ -67,7 +67,7 @@ public class MultiConfiguration {
 		if (unknownArgs.length > 0) {
 			System.err.println("Unknown arguments:");
 			for (String a : unknownArgs) {
-				System.err.println("* " + a);
+				System.err.println("  * " + a);
 			}
 		}
 	}

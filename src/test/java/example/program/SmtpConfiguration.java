@@ -63,7 +63,7 @@ public class SmtpConfiguration {
 		if (badArgs.length > 0) {
 			System.err.println("Arguments that are unknown or have invalid values:");
 			for (String a : badArgs) {
-				System.err.println("* " + a);
+				System.err.println("  * " + a);
 			}
 		}
 	}

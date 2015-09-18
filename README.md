@@ -141,51 +141,40 @@ public class SmtpConfiguration {
 		if (unknownArgs.length > 0) {
 			System.err.println("Unknown arguments:");
 			for (String a : unknownArgs) {
-				System.err.println("* " + a);
+				System.err.println("  * " + a);
 			}
 		}
 	}
 }
 ```
-Running it produces the following output:
+Running it with `-port=submit` produces the following output:
 ```
+Using: localhost:587
 Module SmtpConfiguration:
 -address, $MYMAIL_ADDRESS
-	value: 'localhost' (default)
+	value: 'localhost' (is default)
 -port, $MYMAIL_PORT
-	value: 'smtp' (default)
+	value: 'submit', default: 'smtp'
 	available values:
-	        smtp  smtp port for mailing between servers
-	        submit  smtp submit port for clients sending mail
+	  smtp    smtp port for mailing between servers
+	  submit  smtp submit port for clients sending mail
 ```
 
 You can change the output. `export MYMAIL_PORT=submit` sets the port field to submit. `-port=smtp` would overwrite it.
 
 Setting `-port=lalala` causes an error; `lalala` is no value of the SmtpPort enum.
 ```
-Exception in thread "main" org.jatronizer.configurator.IllegalValueException: Could not convert from String with public static example.program.SmtpConfiguration$SmtpPort example.program.SmtpConfiguration$SmtpPort.valueOf(java.lang.String)
-	at org.jatronizer.configurator.Converters$EnumConverter.fromString(Converters.java:215)
-	at org.jatronizer.configurator.ConfigParameterField.set(ConfigParameterField.java:172)
-	at org.jatronizer.configurator.InstanceConfigurator.set(InstanceConfigurator.java:154)
-	at org.jatronizer.configurator.InstanceConfigurator.set(InstanceConfigurator.java:162)
-	at org.jatronizer.configurator.ConfigManager.setFromArgs(ConfigManager.java:287)
-	at example.program.SmtpConfiguration.main(SmtpConfiguration.java:54)
-	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.lang.reflect.Method.invoke(Method.java:483)
-	at com.intellij.rt.execution.application.AppMain.main(AppMain.java:140)
-Caused by: java.lang.reflect.InvocationTargetException
-	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.lang.reflect.Method.invoke(Method.java:483)
-	at org.jatronizer.configurator.Converters$EnumConverter.fromString(Converters.java:213)
-	... 10 more
-Caused by: java.lang.IllegalArgumentException: No enum constant example.program.SmtpConfiguration.SmtpPort.lalala
-	at java.lang.Enum.valueOf(Enum.java:238)
-	at example.program.SmtpConfiguration$SmtpPort.valueOf(SmtpConfiguration.java:9)
-	... 15 more
+Using: localhost:25
+Module SmtpConfiguration:
+-address, $MYMAIL_ADDRESS
+	value: 'localhost' (is default)
+-port, $MYMAIL_PORT
+	value: 'smtp' (is default)
+	available values:
+	  smtp    smtp port for mailing between servers
+	  submit  smtp submit port for clients sending mail
+Arguments that are unknown or have invalid values:
+  * port=lalala
 ```
 
 Have a look at the java/example/ folder for more!

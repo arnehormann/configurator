@@ -47,7 +47,7 @@ public class SingleConfiguration {
 		if (unknownArgs.length > 0) {
 			System.err.println("Unknown arguments:");
 			for (String a : unknownArgs) {
-				System.err.println("* " + a);
+				System.err.println("  * " + a);
 			}
 		}
 	}
