@@ -162,7 +162,8 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Splits argument pairs in form {@code -key=value} and stores the parameter key and the parsed value.
+	 * Parses arguments in form {@code -key=value} and stores the parameter key and its converted value.
+	 * If the argument has the form {@code -key}, it is interpreted as a boolean {@code -key=true}.
 	 * A {@link ConfigParameter#key} is converted to a command line argument key by changing all chars that are not ANSI
 	 * letters or digits to dashes ({@code -}), prefixing all sequences of uppercase letters with dashes,
 	 * changing sequences of dashes to a single dash and converting the result to lowercase.

@@ -188,14 +188,22 @@ final class ConfigSupport {
 		int numSet = 0;
 		for (String raw : src) {
 			String[] pair = raw.split("=", 2);
-			if (pair.length == 2 && map.containsKey(pair[0])) {
+			switch (pair.length) {
+			case 1:
+				if (map.containsKey(raw)) {
+					// handle booleans without requiring "=true"
+					dest.put(map.get(raw), "true");
+					continue;
+				}
+				break;
+			case 2:
 				if (dest != null) {
 					dest.put(map.get(pair[0]), pair[1]);
 				}
 				numSet++;
-			} else if (destUnused != null) {
-				destUnused.add(raw);
+				continue;
 			}
+			destUnused.add(raw);
 		}
 		return numSet;
 	}
