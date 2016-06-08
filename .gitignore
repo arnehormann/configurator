@@ -13,7 +13,6 @@ target
 lib
 
 # Gradle
-gradle/
 .gradle
 gradle-app.setting
 
