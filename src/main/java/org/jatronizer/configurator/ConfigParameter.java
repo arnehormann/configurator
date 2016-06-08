@@ -63,15 +63,13 @@ public interface ConfigParameter<C,P> extends Converter<P> {
 
 	/**
 	 * Retrieves the {@code String} form of the configuration parameter on the specified configuration.
-	 * @param configuration the configuration from which the value is retrieved.
 	 * @return the value of this parameter in a configuration.
 	 */
-	String get(C configuration);
+	String get();
 
 	/**
 	 * Sets the configuration parameter on the specified configuration to a value given in {@code String} format.
-	 * @param configuration the configuration on which this parameter is set.
 	 * @param value the new value.
 	 */
-	void set(C configuration, String value);
+	void set(String value);
 }

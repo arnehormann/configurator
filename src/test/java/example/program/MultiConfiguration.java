@@ -4,7 +4,7 @@ import org.jatronizer.configurator.*;
 
 public class MultiConfiguration {
 
-	public static class MailConfig {
+	public static class Account {
 		@Parameter(key = "login")
 		@Description("login used for the smtp account")
 		private String user = "root";
@@ -12,6 +12,11 @@ public class MultiConfiguration {
 		@Parameter(key = "pass")
 		@Description("password used for the smtp account")
 		private String password;
+	}
+
+	public static class MailConfig {
+		@Parameter(key = "account/", container = true)
+		private final Account account = new Account();
 
 		@Parameter(key = "host")
 		private String host = "localhost";
@@ -32,13 +37,13 @@ public class MultiConfiguration {
 		// configuration for newsletters
 		MailConfig news = new MailConfig();
 
-		// the configurator manages the warn and news modules
+		// the configurator manages the warn and news configurations
 		Configurator conf = ConfigManager.manage(
-				ConfigManager.module(
+				ConfigManager.configure(
 						warn, "warnmails", "smtp/warn/", "",
 						"SMTP Account for log messages with level WARN and up"
 				),
-				ConfigManager.module(
+				ConfigManager.configure(
 						news, "mailinglist", "smtp/news/", "",
 						"SMTP Account for newsletter"
 				)
@@ -59,7 +64,6 @@ public class MultiConfiguration {
 
 		// print help text in default format:
 		// see HelpPrinter for the implementation.
-		// This could also be used to generate PDFs or a JSON API documentation.
 		ConfigManager.printHelpFor(conf, APP_PREFIX, System.err);
 
 		// print list of unknown arguments

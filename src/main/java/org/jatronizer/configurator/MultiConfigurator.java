@@ -3,7 +3,7 @@ package org.jatronizer.configurator;
 import java.util.*;
 
 /**
- * Manages multiple configuration modules.
+ * Manages multiple configurations.
  */
 final class MultiConfigurator implements Configurator {
 
@@ -62,7 +62,7 @@ final class MultiConfigurator implements Configurator {
 		this.configForKey = configForKey;
 	}
 
-	private Configurator moduleOf(String key) {
+	private Configurator configOf(String key) {
 		int idx = Arrays.binarySearch(keys, key);
 		if (idx < 0) {
 			return null;
@@ -79,7 +79,7 @@ final class MultiConfigurator implements Configurator {
 	}
 
 	public ConfigParameter parameter(String key) {
-		Configurator configurator = moduleOf(key);
+		Configurator configurator = configOf(key);
 		if (configurator == null) {
 			return null;
 		}

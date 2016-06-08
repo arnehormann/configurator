@@ -1,5 +1,6 @@
 package org.jatronizer.configurator;
 
+import javax.naming.ConfigurationException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -10,6 +11,62 @@ final class ConfigSupport {
 	private ConfigSupport() {}
 
 	/**
+	 * Retrieves the value of field from obj, attempts to set field to accessible if it is not.
+	 * @param field
+	 * @param obj
+	 * @return
+	 */
+	static Object retrieve(Field field, Object obj) {
+		try {
+			if (!field.isAccessible()) {
+				// NOTE making field accessible is not reverted later.
+				field.setAccessible(true);
+			}
+			return field.get(obj);
+		} catch (Exception e) {
+			throw new ConfigException(field.toString() + " could not be accessed", e);
+		}
+	}
+
+	private static void addConfig(Collection<ConfigParameter> dest, String keyPrefix, Object conf) {
+		Class cc = conf.getClass();
+		if (keyPrefix == null) {
+			keyPrefix = "";
+		}
+		for (Field f : cc.getDeclaredFields()) {
+			addField(dest, keyPrefix, f, conf);
+		}
+	}
+
+	private static void addField(Collection<ConfigParameter> dest, String keyPrefix, Field f, Object conf) {
+		Parameter p = f.getAnnotation(Parameter.class);
+		if (p == null) {
+			return;
+		}
+
+		if (p.container()) {
+			Object subconf = retrieve(f, conf);
+			if (subconf == null) {
+				throw new ConfigException("configuration field " + f.getName() + keyPrefix + " is null");
+			}
+			addConfig(dest, keyPrefix + p.key(), subconf);
+			return;
+		}
+
+		String key = p.key();
+		if ("".equals(key)) {
+			key = f.getName();
+		}
+		dest.add(ConfigParameterField.create(
+				conf,
+				f,
+				keyPrefix + key,
+				p.tag(),
+				p.converter()
+		));
+	}
+
+	/**
 	 * Fetches all fields annotated with {@link Parameter} from {@code configuration}.
 	 * @param configuration An instance with {@code Parameter} annotated fields, must not be {@code null}.
 	 * @param keyPrefix A prefix for all keys representing the parameters.
@@ -17,36 +74,14 @@ final class ConfigSupport {
 	 */
 	public static ConfigParameter[] fetchParameters(Object configuration, String keyPrefix) {
 		Class cc = configuration.getClass();
-		Field[] fields = cc.getDeclaredFields();
-		ArrayList<ConfigParameter> conf = new ArrayList<ConfigParameter>(fields.length);
-		if (keyPrefix == null) {
-			keyPrefix = "";
-		}
-		for (Field f : fields) {
-			Parameter p = f.getAnnotation(Parameter.class);
-			if (p != null) {
-				String key = p.key();
-				if ("".equals(key)) {
-					key = f.getName();
-				}
-				conf.add(ConfigParameterField.create(
-						configuration,
-						f,
-						keyPrefix + key,
-						p.tag(),
-						p.converter()
-				));
-			}
-		}
-		if (conf.isEmpty()) {
+		ArrayList<ConfigParameter> params = new ArrayList<ConfigParameter>();
+		addConfig(params, keyPrefix, configuration);
+		if (params.isEmpty()) {
 			throw new ConfigException(
-					"configure " +
-					cc +
-					" has no fields annotated with " +
-					Parameter.class.getSimpleName()
+					"" + cc + " contains no configurations or parameters"
 			);
 		}
-		ConfigParameter[] parameters = conf.toArray(new ConfigParameter[conf.size()]);
+		ConfigParameter[] parameters = params.toArray(new ConfigParameter[params.size()]);
 		Arrays.sort(parameters, new Comparator<ConfigParameter>() {
 			public int compare(ConfigParameter o1, ConfigParameter o2) {
 				return o1.key().compareTo(o2.key());
@@ -74,7 +109,7 @@ final class ConfigSupport {
 		private static String formatKey(String key, String separator) {
 			return key
 					// prefix each sequence of capital letters with separator
-					.replaceAll("([A-Z]+)", separator + "\\1")
+					.replaceAll("([A-Z]+)", separator + "$1")
 					// change all non alphanumeric char sequences to separator
 					.replaceAll("[^A-Za-z0-9]+", separator)
 			;

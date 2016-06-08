@@ -40,11 +40,11 @@ final class HelpPrinter implements ConfigVisitor {
 		}
 	}
 
-	public void visitModule(String name, String tag, String description, Configurator configurator) {
+	public void visitConfiguration(String name, String tags, String description, Configurator configurator) {
 		if ("".equals(name)) {
 			return;
 		}
-		String text = "Module " + name + ":";
+		String text = "\nParameters for " + name + ":";
 		if (!"".equals(description)) {
 			text += " " + description;
 		}

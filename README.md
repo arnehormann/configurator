@@ -51,15 +51,14 @@ Create a class with fields for all configuration options you need in a module.
 
 Supported field types are all primitive types, `String` and every kind of `enum`. A little assembly is required for anything else, namely a two-way converter between the type and a String representation.
 
-If you want to, annotate the class with `@Module` to provide a description of what it is used for.
-
-Annotate all configurable fields with `@Parameter`. Assign an optional `key` to reference the field. If you omit it, the field name is used. You can also assign the `converter` mentioned above. And you can `tag` the parameter if you want to group it in the documentation.
+Annotate all configurable fields with `@Parameter`. Assign an optional `key` to reference the field. If you omit it, the field name is used. You can also assign the `converter` mentioned above. And you can `tag` the parameter if you want to group it in the documentation. If the parameter
+contains other parameters, set `container=true`.
 
 Annotate the field with `@Description` and provide a description of what the parameter does.
 
 Create a `Configurator` with `ConfigManager.configure`.
 
-If you dislike annotations or you want to use classes out of your control for a configuration, 
+If you dislike annotations or you want to use classes out of your control for a configuration,
 you'll be happy to have the `manage`, `module` and `parameter` methods at your disposal.
 
 Fill the configuration values from
@@ -173,6 +172,7 @@ Module SmtpConfiguration:
 	available values:
 	  smtp    smtp port for mailing between servers
 	  submit  smtp submit port for clients sending mail
+
 Arguments that are unknown or have invalid values:
   * port=lalala
 ```

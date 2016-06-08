@@ -40,7 +40,6 @@ public interface Configurator {
 
 	/**
 	 * Sets a configuration parameter and reports the number of values that were set.
-	 * This operation is synchronized on the configuration module {@code key} belongs to.
 	 * @param key the key identifiying the parameter.
 	 * @param value the new value.
 	 * @return number of values set, {@code 1} if the parameter for {@code key} exists and {@code value} can be
@@ -50,7 +49,6 @@ public interface Configurator {
 
 	/**
 	 * Sets multiple configuration parameters and reports the number of values that were set.
-	 * This operation is synchronized per configuration module.
 	 * @param configuration key-value combinations that should be set.
 	 * @return key-value combinations that could not be set.
 	 */
@@ -59,15 +57,14 @@ public interface Configurator {
 	/**
 	 * Sets multiple configuration parameters and reports the number of values that were set.
 	 * Each key and each value stored in configuration must be a {@code String}.
-	 * This operation is synchronized per configuration module.
 	 * @param configuration key-value combinations that should be set.
 	 * @return key-value combinations that could not be set.
 	 */
 	Map<String, String> set(Properties configuration);
 
 	/**
-	 * Iterates over all managed configuration modules and all their parameters.
-	 * {@code walk} calls {@code visitModule} and {@code visitParameter} on {@code v}.
+	 * Iterates over all managed configurations and all their parameters.
+	 * {@code walk} calls {@code visitConfiguration} and {@code visitParameter} on {@code v}.
 	 * A visitor could use {@code walk} to generate help text and documentation or a user interface to change values
 	 * dynamically.
 	 * @param visitor the visitor.

@@ -70,27 +70,29 @@ public final class ConfigManager {
 		if (configuration == null) {
 			throw new NullPointerException("configuration is null");
 		}
+		if (keyPrefix == null) {
+			keyPrefix = "";
+		}
 		return ConfigSupport.fetchParameters(configuration, keyPrefix);
 	}
 
 	/**
-	 * Creates a module from a configuration that does not use the {@link Module} annotation.
-	 * In most cases, this will be used if the same module should be used twice but with different
+	 * Creates a configuration.
+	 * In most cases, this will be used if multiple instances from the same class are required with different
 	 * key prefixes and another usage.
-	 * If no customization is needed and {@link Parameter} and optionally also {@code Module} and
-	 * {@code Description} annotations are used, {@link #configure(Object[])} should be used with
-	 * {@code configuration} as the single argument.
+	 * If no customization is needed and {@link Parameter} and {@code Description} annotations are used,
+	 * {@link #configure(Object[])} should be used with {@code configuration} as the single argument.
 	 * @param configuration An instance containing the fields in {@code params}, must not be {@code null}.
-	 * @param name The name of the module as in {@link Module#name}.
-	 * @param keyPrefix A common prefix for all keys in this module as in {@link Module#keyPrefix}.
-	 * @param tag A tag as in {@link Module#tag}.
+	 * @param name The name of the configuration.
+	 * @param keyPrefix A common prefix for all keys in this configuration.
+	 * @param tag One or more space-separated tags.
 	 * @param description A description, an alternative to the {@link Description} annotation.
 	 * @param params The configuration parameters, must all reference fields on {@code configuration}.
 	 *               If {@code params} is empty, the result of {@link #parameters(Object, String)} is used.
 	 * @param <C> Type of the configuration.
-	 * @return Configurator for the module.
+	 * @return Configurator for {@code configuration}.
 	 */
-	public static <C> Configurator module(
+	public static <C> Configurator configure(
 			C configuration, String name, String keyPrefix, String tag, String description, ConfigParameter... params) {
 		if (configuration == null) {
 			throw new NullPointerException("configuration is null");
@@ -98,13 +100,13 @@ public final class ConfigManager {
 		if (params.length == 0) {
 			params = parameters(configuration, keyPrefix);
 		}
-		return InstanceConfigurator.control(configuration, name, keyPrefix, tag, description, params);
+		return InstanceConfigurator.control(configuration, name, tag, description, params);
 	}
 
 	/**
 	 * Creates a {@link Configurator} for configurations with {@link Parameter} annotated fields.
-	 * This is the preferred way to create a {@code Configurator} for a single module that uses
-	 * {@link Parameter} and optionally also {@code Module} and {@code Description} annotations.
+	 * This is the preferred way to create a {@code Configurator} for a single configuration that uses
+	 * {@link Parameter} and optionally also {@code Description} annotations.
 	 * All configurations must have unique keys.
 	 * @param configurations The configuration instances.
 	 * @param <C> Type of the configuration.
@@ -141,7 +143,7 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * Prints a help text for all modules and parameters available in the specified {@link Configurator}.
+	 * Prints a help text for all configurations and parameters available in the specified {@link Configurator}.
 	 * It also prints environment variable names and command line argument keys (-key=value)
 	 * and the current and default values.
 	 * @param configurator The {@link Configurator}.
@@ -152,6 +154,11 @@ public final class ConfigManager {
 	public static void printHelpFor(Configurator configurator, String envVarPrefix, OutputStream out) {
 		HelpPrinter help = new HelpPrinter(out, envVarPrefix);
 		configurator.walk(help);
+		try {
+			out.write((int) '\n');
+		} catch (Exception e) {
+			//ignore
+		}
 	}
 
 	/**

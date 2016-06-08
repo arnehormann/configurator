@@ -42,7 +42,7 @@ public class SmtpConfiguration {
 
 	public static final String ENV_PREFIX = "mymail/";
 	public static final SmtpConfiguration CONFIG =
-			new SmtpConfiguration("localhost", SmtpPort.smtp);
+			new SmtpConfiguration("localhost", SmtpPort.submit);
 
 	public static void main(String[] args) {
 		// get managed configuration
@@ -57,7 +57,7 @@ public class SmtpConfiguration {
 		System.out.println("Using: " + CONFIG.address + ":" + CONFIG.port.port);
 
 		// print help text
-		ConfigManager.printHelpFor(conf, ENV_PREFIX, System.err);
+		ConfigManager.printHelpFor(conf, ENV_PREFIX, System.out);
 
 		// print unknown command line arguments
 		if (badArgs.length > 0) {

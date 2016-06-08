@@ -15,6 +15,7 @@ import java.util.Comparator;
  */
 final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 
+	private final C configuration;
 	public final String key;
 	public final String defaultValue;
 	public final String description;
@@ -89,21 +90,10 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 				throw new ConfigException("Could not access enum values of " + c, e);
 			}
 		}
-		String defaultValue;
-		synchronized (configuration) {
-			P value;
-			try {
-				if (!field.isAccessible()) {
-					// NOTE making field accessible is not reverted later.
-					field.setAccessible(true);
-				}
-				value = (P) field.get(configuration);
-			} catch (Exception e) {
-				throw new ConfigException(field.toString() + " could not be accessed", e);
-			}
-			defaultValue = converter.toString(value);
-		}
+		P value = (P) ConfigSupport.retrieve(field, configuration);
+		String defaultValue = converter.toString(value);
 		return new ConfigParameterField<C,P>(
+				configuration,
 				key,
 				field,
 				defaultValue,
@@ -116,6 +106,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	}
 
 	private ConfigParameterField(
+			C configuration,
 			String key,
 			Field field,
 			String defaultValue,
@@ -125,6 +116,7 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 			String[] enumNames,
 			Field[] enumFields
 	) {
+		this.configuration = configuration;
 		this.key = key;
 		this.defaultValue = defaultValue;
 		this.tag = tag;
@@ -152,13 +144,9 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public String get(C configuration) {
+	public String get() {
 		try {
-			P value;
-			synchronized (configuration) {
-				value = (P) field.get(configuration);
-			}
-			return converter.toString(value);
+			return converter.toString((P) field.get(configuration));
 		} catch (IllegalValueException ie) {
 			throw ie;
 		} catch (Exception e) {
@@ -166,12 +154,9 @@ final class ConfigParameterField<C,P> implements ConfigParameter<C,P> {
 		}
 	}
 
-	public void set(C configuration, String value) {
+	public void set(String value) {
 		try {
-			P v = converter.fromString(value);
-			synchronized (configuration) {
-				field.set(configuration, v);
-			}
+			field.set(configuration, (P) converter.fromString(value));
 		} catch (IllegalValueException ie) {
 			throw ie;
 		} catch (Exception e) {
