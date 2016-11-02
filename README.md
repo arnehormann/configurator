@@ -1,18 +1,16 @@
 # Configurator
 This library vastly simplifies requirement [3 of the 12 factor apps: configuration](http://12factor.net/config).
 
-You can use POJOs (plain old java objects) for configuration and have all configuration options in one place!
+You can use POJOs (plain old java objects) for configuration and have all configuration options in one place.
 
 It's [MIT-licensed](https://raw.github.com/jatronizer/configurator/master/LICENSE).
 
 Current build status: [![Build Status](https://travis-ci.org/jatronizer/configurator.png?branch=master)](https://travis-ci.org/jatronizer/configurator) *(master branch)*
 
 ## Motivation
-Remember being a user of a program somebody else wrote.
+Imagine being a first time user of a program somebody else wrote.
 
-Did you ever want to know the configuration objects to a program? Or what each of them mean?
-
-Did you want examples for those options? Did you want to know the currently set values?
+Did you ever want to know the configuration option to a program? Or what each of them mean? Did you want examples for those options? Did you want to know the currently set values?
 
 Have you experienced rising acid levels in your stomach because someone just had to use yet another non standard format for configuration? In the worst case without dependable documentation?
 
@@ -22,26 +20,20 @@ Now think as a developer.
 
 Did your help texts ever grow stale? Have you wished for closer coupling between your program state and the externally configurable parameters?
 
-Did you ever want to generate help texts and man pages automatically?
-
-Have you dreamt of not having to depend of a configuration parsing library?
-
-Did you want to serve your configuration at runtime as JSON and make it editable?
+Did you ever want to generate help texts and man pages automatically? Have you dreamt of not having to depend of a configuration parsing library? Did you want to serve your configuration at runtime as JSON and make it editable from a website?
 
 Good news: all this and more is possible - with less code than you ever wrote for it before.
 
 ## But how?
 
-A lot of information needed for configuration is already present in your program.
-
-The JVM knows the value of a field. It knows the type and name. Why not just use those?
-
+A lot of information needed for configuration is already present in your program.  
+The JVM knows the current value of a field. It knows the type and name. Why not just use those?
 It only has to know what variables are used as externally accessible configuration options.
 
 Configurator was created to concentrate all configuration options in one single Object.
 It can do so for multiple modules with multiple instances per module.
 
-Now the documentation is very close to the code, any kind of help text is easily created!
+Now the documentation is very close to the code, any kind of help text is easily created.
 
 Default values and descriptions are used from the code and never have to be kept in sync.
 If desired, values can be read or even changed after startup - e.g. by exporting it in a web api.
@@ -177,4 +169,4 @@ Arguments that are unknown or have invalid values:
   * port=lalala
 ```
 
-Have a look at the java/example/ folder for more!
+Have a look at the java/example/ folder for more.
