@@ -172,45 +172,45 @@ final class ConfigSupport {
 	}
 
 	public static int parseValues(
-		  Map<String, String> dest,
-		  Collection<String> destUnused,
-		  String[] keys,
-		  String keyPrefix,
-		  KeyFormatter format,
-		  String[] src) {
-	   if (keyPrefix == null) {
-		  keyPrefix = "";
-	   }
-	   HashMap<String, String> map = new HashMap<String, String>(keys.length, 1.0f);
-	   for (String key : keys) {
-		  map.put(format.from(keyPrefix + key), key);
-	   }
-	   int numSet = 0;
-	   for (String raw : src) {
-		  String[] pair = raw.split("=", 2);
-		  switch (pair.length) {
-		  case 1:
-			 if (map.containsKey(raw)) {
-				// handle booleans without requiring "=true"
-				if (dest != null) {
-				   dest.put(map.get(raw), "true");
+			Map<String, String> dest,
+			Collection<String> destUnused,
+			String[] keys,
+			String keyPrefix,
+			KeyFormatter format,
+			String[] src) {
+		if (keyPrefix == null) {
+			keyPrefix = "";
+		}
+		HashMap<String, String> map = new HashMap<String, String>(keys.length, 1.0f);
+		for (String key : keys) {
+			map.put(format.from(keyPrefix + key), key);
+		}
+		int numSet = 0;
+		for (String raw : src) {
+			String[] pair = raw.split("=", 2);
+			switch (pair.length) {
+			case 1:
+				if (map.containsKey(raw)) {
+					// handle booleans without requiring "=true"
+					if (dest != null) {
+						dest.put(map.get(raw), "true");
+					}
+					numSet++;
+					continue;
 				}
-				numSet++;
-				continue;
-			 }
-			 break;
-		  case 2:
-			 if (map.containsKey(pair[0])) {
-				if (dest != null) {
-				   dest.put(map.get(pair[0]), pair[1]);
+				break;
+			case 2:
+				if (map.containsKey(pair[0])) {
+					if (dest != null) {
+						dest.put(map.get(pair[0]), pair[1]);
+					}
+					numSet++;
+					continue;
 				}
-				numSet++;
-				continue;
-			 }
-			 break;
-		  }
-		  destUnused.add(raw);
-	   }
-	   return numSet;
+				break;
+			}
+			destUnused.add(raw);
+		}
+		return numSet;
 	}
 }
