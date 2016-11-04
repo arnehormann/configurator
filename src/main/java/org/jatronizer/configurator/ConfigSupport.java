@@ -1,6 +1,5 @@
 package org.jatronizer.configurator;
 
-import javax.naming.ConfigurationException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -188,28 +187,24 @@ final class ConfigSupport {
 		int numSet = 0;
 		for (String raw : src) {
 			String[] pair = raw.split("=", 2);
-			switch (pair.length) {
-			case 1:
-				if (map.containsKey(raw)) {
-					// handle booleans without requiring "=true"
-					if (dest != null) {
-						dest.put(map.get(raw), "true");
-					}
-					numSet++;
-					continue;
+			final String key = map.get(pair[0]);
+			if (key == null) {
+				if (destUnused != null) {
+					destUnused.add(raw);
 				}
-				break;
-			case 2:
-				if (map.containsKey(pair[0])) {
-					if (dest != null) {
-						dest.put(map.get(pair[0]), pair[1]);
-					}
-					numSet++;
-					continue;
-				}
-				break;
+				continue;
 			}
-			destUnused.add(raw);
+			final String value;
+			if (pair.length == 2) {
+				value = pair[1];
+			} else {
+				// handle booleans without requiring "=true"
+				value = "true";
+			}
+			if (dest != null) {
+				dest.put(key, value);
+			}
+			numSet++;
 		}
 		return numSet;
 	}

@@ -1,10 +1,11 @@
 package org.jatronizer.configurator;
 
-import static org.jatronizer.configurator.ConfigSupport.KeyFormat.*;
-
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.*;
+
+import static org.jatronizer.configurator.ConfigSupport.KeyFormat.arg;
+import static org.jatronizer.configurator.ConfigSupport.KeyFormat.env;
 
 /**
  * Creates managed configurations.

@@ -1,6 +1,8 @@
 package org.jatronizer.configurator;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Manages the configuration of an application or a subsystem.
